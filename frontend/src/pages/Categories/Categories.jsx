@@ -1,6 +1,6 @@
 /**
- * Categories.jsx Aaa Invory  |  MS-03 Frontend
- * Vista: GestiAAn de CategorAAas
+ * Categories.jsx — Invory  |  MS-03 Frontend
+ * Vista: Gestión de Categorías
  *
  * Ruta:        /categorias
  * Rol admin:   CRUD completo (crear, editar, habilitar, deshabilitar)
@@ -18,9 +18,9 @@ import {
 } from '../../api/categories.js'
 import './categories.css'
 
-/* AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA
-   AACONOS SVG
-AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA */
+/* ─────────────────────────────────────────────────────────────
+   ÍCONOS SVG
+───────────────────────────────────────────────────────────── */
 const IconPlus = () => (
   <svg className="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
     <line x1="12" y1="5" x2="12" y2="19" />
@@ -85,9 +85,9 @@ const IconEnable = () => (
   </svg>
 )
 
-/* AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA
+/* ─────────────────────────────────────────────────────────────
    HOOK: TOASTS
-AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA */
+───────────────────────────────────────────────────────────── */
 function useToast() {
   const [toasts, setToasts] = useState([])
   const timers = useRef({})
@@ -116,9 +116,9 @@ function ToastContainer({ toasts }) {
   )
 }
 
-/* AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA
-   MODAL DE CONFIRMACIAaN (deshabilitar / habilitar)
-AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA */
+/* ─────────────────────────────────────────────────────────────
+   MODAL DE CONFIRMACIÓN (deshabilitar / habilitar)
+───────────────────────────────────────────────────────────── */
 function ConfirmModal({ open, variant, categoryName, onConfirm, onCancel, loading }) {
   useEffect(() => {
     if (!open) return
@@ -140,7 +140,7 @@ function ConfirmModal({ open, variant, categoryName, onConfirm, onCancel, loadin
       onClick={e => { if (e.target === e.currentTarget) onCancel() }}
     >
       <div className="modal confirm-modal">
-        {/* AAcono central */}
+        {/* Ícono central */}
         <div className={`confirm-modal__icon-wrap confirm-modal__icon-wrap--${isDisable ? 'danger' : 'success'}`}>
           {isDisable ? <IconWarning /> : <IconEnable />}
         </div>
@@ -148,17 +148,17 @@ function ConfirmModal({ open, variant, categoryName, onConfirm, onCancel, loadin
         {/* Contenido */}
         <div className="confirm-modal__body">
           <h3 className="confirm-modal__title" id="confirm-modal-title">
-            {isDisable ? 'Deshabilitar categorAAa' : 'Habilitar categorAAa'}
+            {isDisable ? 'Deshabilitar categoría' : 'Habilitar categoría'}
           </h3>
           <p className="confirm-modal__text">
             {isDisable
-              ? <>Vas a deshabilitar la categorAAa <strong>{categoryName}</strong>. No se eliminarAA del sistema, pero dejarAA de estar disponible para nuevos productos.</>
-              : <>Vas a habilitar la categorAAa <strong>{categoryName}</strong>. QuedarAA disponible nuevamente para asignar productos.</>
+              ? <>Vas a deshabilitar la categoría <strong>{categoryName}</strong>. No se eliminará del sistema, pero dejará de estar disponible para nuevos productos.</>
+              : <>Vas a habilitar la categoría <strong>{categoryName}</strong>. Quedará disponible nuevamente para asignar productos.</>
             }
           </p>
           {isDisable && (
             <p className="confirm-modal__warning">
-              Si la categorAAa tiene productos activos, la operaciAAn serAA rechazada.
+              Si la categoría tiene productos activos, la operación será rechazada.
             </p>
           )}
         </div>
@@ -180,8 +180,8 @@ function ConfirmModal({ open, variant, categoryName, onConfirm, onCancel, loadin
             disabled={loading}
           >
             {loading
-              ? <><IconSpinner /> ProcesandoAaA</>
-              : isDisable ? <> Deshabilitar</> : <> Habilitar</>
+              ? <><IconSpinner /> Procesando…</>
+              : isDisable ? <>Deshabilitar</> : <>Habilitar</>
             }
           </button>
         </div>
@@ -190,9 +190,9 @@ function ConfirmModal({ open, variant, categoryName, onConfirm, onCancel, loadin
   )
 }
 
-/* AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA
+/* ─────────────────────────────────────────────────────────────
    BADGE ESTADO
-AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA */
+───────────────────────────────────────────────────────────── */
 function BadgeEstado({ estado }) {
   return (
     <span className={`badge-estado badge-estado--${estado}`}>
@@ -202,11 +202,11 @@ function BadgeEstado({ estado }) {
   )
 }
 
-/* AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA
+/* ─────────────────────────────────────────────────────────────
    MODAL CREAR / EDITAR
-AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA */
+───────────────────────────────────────────────────────────── */
 function CategoryModal({ open, editing, onClose, onSave }) {
-  const [form, setForm]         = useState({
+  const [form, setForm] = useState({
     nombre_categoria: editing?.nombre_categoria ?? '',
     descripcion:      editing?.descripcion ?? '',
   })
@@ -252,13 +252,12 @@ function CategoryModal({ open, editing, onClose, onSave }) {
       }
       if (editing) {
         await updateCategoria(editing.id, payload)
-        onSave('CategorAAa actualizada correctamente.')
+        onSave('Categoría actualizada correctamente.')
       } else {
         await createCategoria(payload)
-        onSave('CategorAAa creada correctamente.')
+        onSave('Categoría creada correctamente.')
       }
     } catch (err) {
-      // Muestra el mensaje del servidor directamente al usuario
       if (err.status === 409) {
         setApiError(err.message)
         setErrors({ nombre_categoria: 'Nombre duplicado.' })
@@ -287,7 +286,7 @@ function CategoryModal({ open, editing, onClose, onSave }) {
               <IconTag />
             </div>
             <h3 className="modal__title" id="modal-title">
-              {editing ? 'Editar categorAAa' : 'Nueva categorAAa'}
+              {editing ? 'Editar categoría' : 'Nueva categoría'}
             </h3>
           </div>
           <button className="btn-icon-only" onClick={onClose} aria-label="Cerrar" type="button">
@@ -305,7 +304,7 @@ function CategoryModal({ open, editing, onClose, onSave }) {
         <form className="modal__body" onSubmit={handleSubmit} noValidate>
           <div className={`field ${errors.nombre_categoria ? 'field--error' : ''}`}>
             <label htmlFor="inputNombre" className="field__label">
-              Nombre de la categorAAa <span className="required">*</span>
+              Nombre de la categoría <span className="required">*</span>
             </label>
             <input
               ref={inputRef}
@@ -313,7 +312,7 @@ function CategoryModal({ open, editing, onClose, onSave }) {
               name="nombre_categoria"
               type="text"
               className="field__input"
-              placeholder="Ej: LAActeos"
+              placeholder="Ej: Lácteos"
               maxLength={80}
               autoComplete="off"
               value={form.nombre_categoria}
@@ -326,14 +325,14 @@ function CategoryModal({ open, editing, onClose, onSave }) {
 
           <div className="field">
             <label htmlFor="inputDesc" className="field__label">
-              DescripciAAn <span className="field__optional">(opcional)</span>
+              Descripción <span className="field__optional">(opcional)</span>
             </label>
             <input
               id="inputDesc"
               name="descripcion"
               type="text"
               className="field__input"
-              placeholder="DescripciAAn breve de la categorAAa"
+              placeholder="Descripción breve de la categoría"
               maxLength={200}
               autoComplete="off"
               value={form.descripcion}
@@ -347,7 +346,7 @@ function CategoryModal({ open, editing, onClose, onSave }) {
             Cancelar
           </button>
           <button type="button" className="btn btn--primary" onClick={handleSubmit} disabled={saving}>
-            {saving ? <><IconSpinner /> GuardandoAaA</> : (editing ? 'Guardar cambios' : 'Crear categorAAa')}
+            {saving ? <><IconSpinner /> Guardando…</> : (editing ? 'Guardar cambios' : 'Crear categoría')}
           </button>
         </div>
       </div>
@@ -355,9 +354,9 @@ function CategoryModal({ open, editing, onClose, onSave }) {
   )
 }
 
-/* AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA
+/* ─────────────────────────────────────────────────────────────
    COMPONENTE PRINCIPAL
-AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA */
+───────────────────────────────────────────────────────────── */
 export default function Categories() {
   const { user }  = useAuth()
   const isAdmin   = user?.rol === 'Administrador'
@@ -369,9 +368,8 @@ export default function Categories() {
   const [modalOpen,    setModalOpen]    = useState(false)
   const [editing,      setEditing]      = useState(null)
 
-  // Estado para modales de confirmaciAAn
   const [confirmOpen,    setConfirmOpen]    = useState(false)
-  const [confirmVariant, setConfirmVariant] = useState('disable') 
+  const [confirmVariant, setConfirmVariant] = useState('disable')
   const [confirmCat,     setConfirmCat]     = useState(null)
   const [confirmLoading, setConfirmLoading] = useState(false)
 
@@ -387,9 +385,8 @@ export default function Categories() {
         : (data.categorias ?? data.data?.categorias ?? [])
       setCategorias(lista)
     } catch (err) {
-      // Muestra el mensaje del servidor, no el cAAdigo de error
       setBannerMsg({
-        text: err.message ?? 'No fue posible cargar las categorAAas. Intenta nuevamente.',
+        text: err.message ?? 'No fue posible cargar las categorías. Intenta nuevamente.',
         type: 'error',
       })
       setCategorias([])
@@ -405,14 +402,12 @@ export default function Categories() {
   function cerrarModal()    { setModalOpen(false); setEditing(null) }
   function handleSaved(msg) { cerrarModal(); addToast(msg, 'success'); cargarCategorias() }
 
-  /* AaaAaa ConfirmaciAAn deshabilitar AaaAaa */
   function pedirConfirmDeshabilitar(cat) {
     setConfirmCat(cat)
     setConfirmVariant('disable')
     setConfirmOpen(true)
   }
 
-  /* AaaAaa ConfirmaciAAn habilitar AaaAaa */
   function pedirConfirmHabilitar(cat) {
     setConfirmCat(cat)
     setConfirmVariant('enable')
@@ -432,22 +427,20 @@ export default function Categories() {
       if (confirmVariant === 'disable') {
         await deleteCategoria(confirmCat.id)
         cerrarConfirm()
-        addToast('CategorAAa deshabilitada correctamente.', 'success')
+        addToast('Categoría deshabilitada correctamente.', 'success')
       } else {
         await enableCategoria(confirmCat.id)
         cerrarConfirm()
-        addToast('CategorAAa habilitada correctamente.', 'success')
+        addToast('Categoría habilitada correctamente.', 'success')
       }
       cargarCategorias()
     } catch (err) {
       cerrarConfirm()
-      // Error 409 = categorAAa en uso Aaa banner visible arriba de la tabla
       if (err.status === 409) {
         setBannerMsg({ text: err.message, type: 'error' })
         window.scrollTo({ top: 0, behavior: 'smooth' })
       } else {
-        // Cualquier otro error Aaa toast con el mensaje del servidor
-        addToast(err.message ?? 'No fue posible completar la operaciAAn.', 'error')
+        addToast(err.message ?? 'No fue posible completar la operación.', 'error')
       }
     }
   }
@@ -464,7 +457,7 @@ export default function Categories() {
         <tr>
           <td colSpan={isAdmin ? 4 : 3} className="table-empty">
             <IconSpinner />
-            <span>Cargando categorAAasAaA</span>
+            <span>Cargando categorías…</span>
           </td>
         </tr>
       )
@@ -474,7 +467,7 @@ export default function Categories() {
         <tr>
           <td colSpan={isAdmin ? 4 : 3} className="table-empty">
             <IconTag />
-            <span>No hay categorAAas para mostrar.</span>
+            <span>No hay categorías para mostrar.</span>
           </td>
         </tr>
       )
@@ -485,7 +478,7 @@ export default function Categories() {
         <tr key={cat.id}>
           <td className="td-nombre">{cat.nombre_categoria}</td>
           <td className="td-desc">
-            {cat.descripcion ? cat.descripcion : <span className="text-muted">Aaa</span>}
+            {cat.descripcion ? cat.descripcion : <span className="text-muted">—</span>}
           </td>
           <td><BadgeEstado estado={activo ? 'activo' : 'inactivo'} /></td>
           {isAdmin && (
@@ -494,25 +487,25 @@ export default function Categories() {
                 <button
                   className="btn btn--outline btn--sm"
                   onClick={() => abrirEditar(cat)}
-                  title="Editar categorAAa"
+                  title="Editar categoría"
                 >
-                   Editar
+                  Editar
                 </button>
                 {activo ? (
                   <button
                     className="btn btn--danger btn--sm"
                     onClick={() => pedirConfirmDeshabilitar(cat)}
-                    title="Deshabilitar categorAAa"
+                    title="Deshabilitar categoría"
                   >
-                     Deshabilitar
+                    Deshabilitar
                   </button>
                 ) : (
                   <button
                     className="btn btn--success btn--sm"
                     onClick={() => pedirConfirmHabilitar(cat)}
-                    title="Habilitar categorAAa"
+                    title="Habilitar categoría"
                   >
-                     Habilitar
+                    Habilitar
                   </button>
                 )}
               </div>
@@ -528,13 +521,12 @@ export default function Categories() {
 
       <div className="cat-page__header">
         <div className="cat-page__heading">
-          <h2 className="cat-page__title">GestiAAn de categorAAas</h2>
-          <p className="cat-page__subtitle">Organiza el catAAlogo de productos por categorAAa</p>
+          <h2 className="cat-page__title">Gestión de categorías</h2>
+          <p className="cat-page__subtitle">Organiza el catálogo de productos por categoría</p>
         </div>
         {isAdmin && (
           <button className="btn btn--primary btn--lg" onClick={abrirCrear}>
-          
-            Nueva categorAAa
+            Nueva categoría
           </button>
         )}
       </div>
@@ -571,7 +563,7 @@ export default function Categories() {
           </div>
           {!loading && (
             <span className="table-card__count">
-              {categorias.length} {categorias.length === 1 ? 'categorAAa' : 'categorAAas'}
+              {categorias.length} {categorias.length === 1 ? 'categoría' : 'categorías'}
             </span>
           )}
         </div>
@@ -579,8 +571,8 @@ export default function Categories() {
         <table className="cat-table">
           <thead>
             <tr>
-              <th>CategorAAa</th>
-              <th>DescripciAAn</th>
+              <th>Categoría</th>
+              <th>Descripción</th>
               <th>Estado</th>
               {isAdmin && <th className="th-actions">Acciones</th>}
             </tr>
@@ -591,7 +583,6 @@ export default function Categories() {
         </table>
 
         <div className="table-card__footer">
-          
           {!isAdmin && <span className="footer-role">Modo lectura</span>}
         </div>
       </div>
@@ -605,7 +596,7 @@ export default function Categories() {
         onSave={handleSaved}
       />
 
-      {/* Modal confirmaciAAn deshabilitar / habilitar */}
+      {/* Modal confirmación deshabilitar / habilitar */}
       <ConfirmModal
         open={confirmOpen}
         variant={confirmVariant}

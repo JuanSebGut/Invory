@@ -1,6 +1,6 @@
 /**
- * ProvidersPage.jsx Aaa Invory | MS-10 Frontend
- * Vista: GestiAAn de Proveedores
+ * ProvidersPage.jsx — Invory | MS-10 Frontend
+ * Vista: Gestión de Proveedores
  *
  * Ruta:        /proveedores
  * Rol admin:   CRUD completo + deshabilitar
@@ -17,9 +17,6 @@ import {
 } from '../../api/providers.js'
 import './providers.css'
 
-/* AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA
-   AACONOS SVG
-AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA */
 const IconClose = () => (
   <svg className="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
     <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
@@ -70,9 +67,6 @@ const IconChevR = () => (
   </svg>
 )
 
-/* AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA
-   HOOK: TOASTS
-AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA */
 function useToast() {
   const [toasts, setToasts] = useState([])
   const timers = useRef({})
@@ -101,9 +95,6 @@ function ToastContainer({ toasts }) {
   )
 }
 
-/* AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA
-   BADGE ESTADO
-AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA */
 function BadgeEstado({ estado }) {
   const activo = estado === 'activo' || estado === true
   return (
@@ -114,9 +105,6 @@ function BadgeEstado({ estado }) {
   )
 }
 
-/* AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA
-   MODAL CONFIRMACIAaN DESHABILITAR
-AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA */
 function ConfirmModal({ open, proveedorNombre, onConfirm, onCancel, loading }) {
   useEffect(() => {
     if (!open) return
@@ -136,16 +124,16 @@ function ConfirmModal({ open, proveedorNombre, onConfirm, onCancel, loading }) {
         <div className="confirm-modal__body">
           <h3 className="confirm-modal__title" id="confirm-title">Deshabilitar proveedor</h3>
           <p className="confirm-modal__text">
-            Vas a deshabilitar <strong>{proveedorNombre}</strong>. El proveedor dejarAA de estar disponible en el sistema, pero su historial se conservarAA.
+            Vas a deshabilitar <strong>{proveedorNombre}</strong>. El proveedor dejará de estar disponible en el sistema, pero su historial se conservará.
           </p>
           <p className="confirm-modal__warning">
-            Esta acciAAn puede revertirse editando el estado del proveedor.
+            Esta acción puede revertirse editando el estado del proveedor.
           </p>
         </div>
         <div className="confirm-modal__footer">
           <button type="button" className="btn btn--ghost" onClick={onCancel} disabled={loading}>Cancelar</button>
           <button type="button" className="btn btn--danger-solid" onClick={onConfirm} disabled={loading}>
-            {loading ? <><IconSpinner /> ProcesandoAaA</> : 'Deshabilitar'}
+            {loading ? <><IconSpinner /> Procesando…</> : 'Deshabilitar'}
           </button>
         </div>
       </div>
@@ -153,28 +141,22 @@ function ConfirmModal({ open, proveedorNombre, onConfirm, onCancel, loading }) {
   )
 }
 
-/* AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA
-   VALIDACIAaN DE FORMULARIO
-AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA */
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 function validateForm(form, isEditing) {
   const errors = {}
   if (!isEditing || form.nombre_razon_social !== undefined) {
-    if (!form.nombre_razon_social?.trim()) errors.nombre_razon_social = 'La razAAn social es obligatoria.'
+    if (!form.nombre_razon_social?.trim()) errors.nombre_razon_social = 'La razón social es obligatoria.'
   }
   if (!isEditing) {
     if (!form.nit_identificacion?.trim()) errors.nit_identificacion = 'El NIT es obligatorio.'
   }
   if (form.correo_electronico?.trim() && !EMAIL_RE.test(form.correo_electronico.trim())) {
-    errors.correo_electronico = 'El correo no tiene un formato vAAlido.'
+    errors.correo_electronico = 'El correo no tiene un formato válido.'
   }
   return errors
 }
 
-/* AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA
-   MODAL CREAR / EDITAR
-AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA */
 const EMPTY_FORM = {
   nombre_razon_social: '',
   nit_identificacion: '',
@@ -298,10 +280,9 @@ function ProviderModal({ open, editing, onClose, onSave }) {
         <form className="modal__body" onSubmit={handleSubmit} noValidate>
           <div className="form-grid">
 
-            {/* RazAAn social */}
             <div className={`field field--full ${errors.nombre_razon_social ? 'field--error' : ''}`}>
               <label htmlFor="p-razon" className="field__label">
-                RazAAn social <span className="required">*</span>
+                Razón social <span className="required">*</span>
               </label>
               <input ref={inputRef} id="p-razon" name="nombre_razon_social" type="text"
                 className="field__input" placeholder="Ej: Distribuidora del Valle S.A.S."
@@ -310,10 +291,9 @@ function ProviderModal({ open, editing, onClose, onSave }) {
               {errors.nombre_razon_social && <span className="field__error-msg">{errors.nombre_razon_social}</span>}
             </div>
 
-            {/* NIT */}
             <div className={`field ${errors.nit_identificacion ? 'field--error' : ''}`}>
               <label htmlFor="p-nit" className="field__label">
-                NIT / IdentificaciAAn <span className="required">*</span>
+                NIT / Identificación <span className="required">*</span>
               </label>
               <input id="p-nit" name="nit_identificacion" type="text"
                 className={`field__input${isEditing ? ' field__input--readonly' : ''}`}
@@ -326,10 +306,9 @@ function ProviderModal({ open, editing, onClose, onSave }) {
               }
             </div>
 
-            {/* TelAAfono */}
             <div className="field">
               <label htmlFor="p-tel" className="field__label">
-                TelAAfono <span className="field__optional">(opcional)</span>
+                Teléfono <span className="field__optional">(opcional)</span>
               </label>
               <input id="p-tel" name="telefono" type="text"
                 className="field__input" placeholder="Ej: 3001112233"
@@ -337,10 +316,9 @@ function ProviderModal({ open, editing, onClose, onSave }) {
                 onChange={handleChange} disabled={saving} />
             </div>
 
-            {/* Correo */}
             <div className={`field ${errors.correo_electronico ? 'field--error' : ''}`}>
               <label htmlFor="p-correo" className="field__label">
-                Correo electrAAnico <span className="field__optional">(opcional)</span>
+                Correo electrónico <span className="field__optional">(opcional)</span>
               </label>
               <input id="p-correo" name="correo_electronico" type="email"
                 className="field__input" placeholder="Ej: ventas@proveedor.com"
@@ -349,18 +327,16 @@ function ProviderModal({ open, editing, onClose, onSave }) {
               {errors.correo_electronico && <span className="field__error-msg">{errors.correo_electronico}</span>}
             </div>
 
-            {/* DirecciAAn */}
             <div className="field field--full">
               <label htmlFor="p-dir" className="field__label">
-                DirecciAAn <span className="field__optional">(opcional)</span>
+                Dirección <span className="field__optional">(opcional)</span>
               </label>
               <input id="p-dir" name="direccion" type="text"
-                className="field__input" placeholder="Ej: Calle 10 # 20-30, BogotAA"
+                className="field__input" placeholder="Ej: Calle 10 # 20-30, Bogotá"
                 maxLength={200} autoComplete="off" value={form.direccion}
                 onChange={handleChange} disabled={saving} />
             </div>
 
-            {/* Estado Aaa solo ediciAAn */}
             {isEditing && (
               <div className="field">
                 <label htmlFor="p-estado" className="field__label">Estado</label>
@@ -377,7 +353,7 @@ function ProviderModal({ open, editing, onClose, onSave }) {
         <div className="modal__footer">
           <button type="button" className="btn btn--ghost" onClick={onClose} disabled={saving}>Cancelar</button>
           <button type="button" className="btn btn--primary" onClick={handleSubmit} disabled={saving}>
-            {saving ? <><IconSpinner /> GuardandoAaA</> : isEditing ? 'Guardar cambios' : 'Registrar proveedor'}
+            {saving ? <><IconSpinner /> Guardando…</> : isEditing ? 'Guardar cambios' : 'Registrar proveedor'}
           </button>
         </div>
       </div>
@@ -385,30 +361,27 @@ function ProviderModal({ open, editing, onClose, onSave }) {
   )
 }
 
-/* AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA
-   PAGINACIAaN
-AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA */
 function Pagination({ page, totalPages, total, onPage }) {
   if (totalPages <= 1) return null
 
   function pageNumbers() {
     const t = totalPages
     if (t <= 6) return Array.from({ length: t }, (_, i) => i + 1)
-    if (page <= 3) return [1, 2, 3, 4, 'AaA', t]
-    if (page >= t - 2) return [1, 'AaA', t - 3, t - 2, t - 1, t]
-    return [1, 'AaA', page - 1, page, page + 1, 'AaA', t]
+    if (page <= 3) return [1, 2, 3, 4, '…', t]
+    if (page >= t - 2) return [1, '…', t - 3, t - 2, t - 1, t]
+    return [1, '…', page - 1, page, page + 1, '…', t]
   }
 
   return (
     <div className="pagination">
       <span className="pagination-info">
-        {total} proveedor{total !== 1 ? 'es' : ''} AA pAAg. {page} de {totalPages}
+        {total} proveedor{total !== 1 ? 'es' : ''} — pág. {page} de {totalPages}
       </span>
       <div className="pagination-controls">
         <button className="btn-page" onClick={() => onPage(page - 1)} disabled={page === 1}><IconChevL /></button>
         {pageNumbers().map((n, i) =>
-          n === 'AaA'
-            ? <span key={`sep${i}`} className="page-sep">AaA</span>
+          n === '…'
+            ? <span key={`sep${i}`} className="page-sep">…</span>
             : <button key={n} className={`btn-page${page === n ? ' btn-page--active' : ''}`} onClick={() => onPage(n)}>{n}</button>
         )}
         <button className="btn-page" onClick={() => onPage(page + 1)} disabled={page === totalPages}><IconChevR /></button>
@@ -417,9 +390,6 @@ function Pagination({ page, totalPages, total, onPage }) {
   )
 }
 
-/* AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA
-   COMPONENTE PRINCIPAL
-AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA */
 export default function ProvidersPage() {
   const { user } = useAuth()
   const isAdmin = user?.rol === 'Administrador'
@@ -508,7 +478,7 @@ export default function ProvidersPage() {
       return (
         <tr>
           <td colSpan={isAdmin ? 6 : 5} className="table-empty">
-            <IconSpinner /><span>Cargando proveedoresAaA</span>
+            <IconSpinner /><span>Cargando proveedores…</span>
           </td>
         </tr>
       )
@@ -530,11 +500,11 @@ export default function ProvidersPage() {
           <td className="td-razon">
             <div className="razon-cell">
               <div className="prov-avatar">{(p.nombre_razon_social ?? p.razon_social ?? 'P').charAt(0).toUpperCase()}</div>
-              <span className="razon-text">{p.nombre_razon_social ?? p.razon_social ?? 'Aaa'}</span>
+              <span className="razon-text">{p.nombre_razon_social ?? p.razon_social ?? '—'}</span>
             </div>
           </td>
           <td className="td-nit">
-            <span className="nit-badge">{p.nit_identificacion ?? p.nit ?? 'Aaa'}</span>
+            <span className="nit-badge">{p.nit_identificacion ?? p.nit ?? '—'}</span>
           </td>
           <td className="td-contacto">
             <div className="contacto-cell">
@@ -545,12 +515,14 @@ export default function ProvidersPage() {
                 <span className="contacto-item contacto-item--muted">{p.telefono}</span>
               )}
               {!p.correo_electronico && !p.correo && !p.telefono && (
-                <span className="text-muted">Aaa</span>
+                <span className="text-muted">—</span>
               )}
             </div>
           </td>
           <td className="td-dir">
-            {p.direccion ? <span className="dir-text" title={p.direccion}>{p.direccion.length > 35 ? p.direccion.slice(0, 35) + 'AaA' : p.direccion}</span> : <span className="text-muted">Aaa</span>}
+            {p.direccion
+              ? <span className="dir-text" title={p.direccion}>{p.direccion.length > 35 ? p.direccion.slice(0, 35) + '…' : p.direccion}</span>
+              : <span className="text-muted">—</span>}
           </td>
           <td><BadgeEstado estado={p.estado} /></td>
           {isAdmin && (
@@ -558,7 +530,7 @@ export default function ProvidersPage() {
               <div className="actions-group">
                 <button className="btn btn--outline btn--sm" onClick={() => abrirEditar(p)} title="Editar proveedor">Editar</button>
                 <button className="btn btn--danger btn--sm" onClick={() => pedirConfirm(p)}
-                  disabled={!activo} title={!activo ? 'Ya estAA deshabilitado' : 'Deshabilitar proveedor'}>
+                  disabled={!activo} title={!activo ? 'Ya está deshabilitado' : 'Deshabilitar proveedor'}>
                   Deshabilitar
                 </button>
               </div>
@@ -573,7 +545,7 @@ export default function ProvidersPage() {
     <div className="prov-page">
       <div className="prov-page__header">
         <div className="prov-page__heading">
-          <h2 className="prov-page__title">GestiAAn de proveedores</h2>
+          <h2 className="prov-page__title">Gestión de proveedores</h2>
           <p className="prov-page__subtitle">Administra los proveedores del sistema de inventario</p>
         </div>
         {isAdmin && (
@@ -593,11 +565,10 @@ export default function ProvidersPage() {
         </div>
       )}
 
-      {/* Filtros */}
       <div className="filter-row">
         <div className="search-wrap">
           <IconSearch />
-          <input type="text" className="search-input" placeholder="Buscar por razAAn social, NIT o correoAaA"
+          <input type="text" className="search-input" placeholder="Buscar por razón social, NIT o correo…"
             value={filterSearch} onChange={handleSearchChange} aria-label="Buscar proveedor" />
         </div>
         <div className="filter-bar">
@@ -628,7 +599,7 @@ export default function ProvidersPage() {
                 <th>Proveedor</th>
                 <th>NIT</th>
                 <th>Contacto</th>
-                <th>DirecciAAn</th>
+                <th>Dirección</th>
                 <th>Estado</th>
                 {isAdmin && <th className="th-actions">Acciones</th>}
               </tr>

@@ -72,8 +72,8 @@ export default function DashboardPage() {
   return (
     <div className="dashboard">
       <div className="dashboard__header">
-        <h2 className="dashboard__title">Dashboard</h2>
-        <p className="dashboard__subtitle">Resumen rAApido de operaciAAn y movimientos recientes</p>
+        <h2 className="dashboard__title">Inicio</h2>
+        <p className="dashboard__subtitle">Resumen rapido de operacion y movimientos recientes</p>
       </div>
       <div className="dashboard__body">
         <section className="kpi-grid">
@@ -82,7 +82,7 @@ export default function DashboardPage() {
             {loading ? <div className="kpi-card__skeleton" /> : <p className="kpi-card__value">{formatMoney(kpi.salesToday)}</p>}
           </article>
           <article className="kpi-card kpi-card--critical" onClick={() => navigate('/alertas')}>
-            <p className="kpi-card__label">Stock crAAtico</p>
+            <p className="kpi-card__label">Stock Alertas</p>
             {loading ? <div className="kpi-card__skeleton" /> : <p className="kpi-card__value">{kpi.lowStock ?? 'Aaa'}</p>}
           </article>
           <article className="kpi-card kpi-card--moves">
@@ -106,7 +106,7 @@ export default function DashboardPage() {
         )}
 
         <section className="kpi-card">
-          <p className="kpi-card__label">AAltimos movimientos</p>
+          <p className="kpi-card__label">Ultimos movimientos</p>
           <table className="db2-table">
             <thead>
               <tr><th>Tipo</th><th>Producto</th><th>Cantidad</th><th>Stock resultante</th><th>Fecha y hora</th></tr>

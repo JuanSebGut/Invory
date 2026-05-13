@@ -1,11 +1,12 @@
+
 /**
- * Inventory.jsx Aaa Invory  |  MS-05 Frontend
+ * Inventory.jsx | MS-05 Frontend
  * Vista: Movimientos de Inventario
  *
  * Ruta:       /inventario
  * Roles:
- *   Administrador Aaa Entrada, Salida, Ajuste + Historial completo
- *   Operador      Aaa Entrada, Salida          + Historial (solo lectura de ajustes)
+ *   Administrador → Entrada, Salida, Ajuste + Historial completo
+ *   Operador      → Entrada, Salida          + Historial (solo lectura de ajustes)
  *
  * MS-08: Los movimientos de ENTRADA ahora permiten asociar un proveedor
  *        (id_proveedor opcional). Se carga el listado de proveedores activos
@@ -22,9 +23,9 @@ import {
 import { getProveedoresActivos } from '../../api/providers.js'
 import './inventory.css'
 
-/* AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA
-   AACONOS SVG
-AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA */
+/* ─────────────────────────────────────────────
+   ICONOS SVG
+───────────────────────────────────────────── */
 
 const IconEntrada = ({ size = 22 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
@@ -70,15 +71,12 @@ const IconLock = () => (
     <path d="M7 11V7a5 5 0 0 1 10 0v4" />
   </svg>
 )
-
-/* AAcono de proveedor/empresa */
 const IconProveedor = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
     <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
     <polyline points="9 22 9 12 15 12 15 22" />
   </svg>
 )
-
 const IconSpinner = () => (
   <svg className="spinner" width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
     <circle cx="12" cy="12" r="10" strokeWidth="3" stroke="currentColor" strokeOpacity="0.2" />
@@ -86,9 +84,9 @@ const IconSpinner = () => (
   </svg>
 )
 
-/* AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA
+/* ─────────────────────────────────────────────
    HOOK: TOASTS
-AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA */
+───────────────────────────────────────────── */
 function useToast() {
   const [toasts, setToasts] = useState([])
   const timers = useRef({})
@@ -117,14 +115,14 @@ function ToastContainer({ toasts }) {
   )
 }
 
-/* AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA
+/* ─────────────────────────────────────────────
    FORMULARIO DE REGISTRO
-AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA */
+───────────────────────────────────────────── */
 const MOTIVOS_SALIDA = [
   { val: 'venta',   label: 'Venta' },
   { val: 'merma',   label: 'Merma' },
   { val: 'rotura',  label: 'Rotura' },
-  { val: 'danado',  label: 'DaAAado' },
+  { val: 'danado',  label: 'Dañado' },
   { val: 'vencido', label: 'Vencido' },
 ]
 
@@ -140,7 +138,7 @@ const INITIAL_FORM = {
   // ajuste
   tipo_ajuste:    'sobrante',
   motivo_ajuste:  '',
-  // comAAn
+  // común
   comentario:     '',
 }
 
@@ -202,7 +200,6 @@ function FormRegistro({ isAdmin, productos, productosCargando, proveedores, prov
     }
 
     if (tipoMovimiento === 'entrada') {
-      // MS-08: incluir proveedor si fue seleccionado
       if (form.id_proveedor) {
         payload.id_proveedor = Number(form.id_proveedor)
       }
@@ -237,7 +234,6 @@ function FormRegistro({ isAdmin, productos, productosCargando, proveedores, prov
     setApiError(null)
   }
 
-  // Pantalla de AAxito tras registro
   if (resultado) {
     return (
       <div className="registro-result">
@@ -250,16 +246,16 @@ function FormRegistro({ isAdmin, productos, productosCargando, proveedores, prov
           {tipoMovimiento === 'ajuste'  && 'Ajuste registrado'}
         </h3>
         <p className="registro-result__detail">
-          <strong>{resultado.nombre_producto}</strong> Aaa {Number(resultado.cantidad)} unidades
-          {resultado.numero_factura ? ` AA Factura: ${resultado.numero_factura}` : ''}
+          <strong>{resultado.nombre_producto}</strong> — {Number(resultado.cantidad)} unidades
+          {resultado.numero_factura ? ` · Factura: ${resultado.numero_factura}` : ''}
           {resultado.id_proveedor && proveedorSeleccionado
-            ? ` AA Proveedor: ${proveedorSeleccionado.razon_social ?? proveedorSeleccionado.nombre}`
+            ? ` · Proveedor: ${proveedorSeleccionado.razon_social ?? proveedorSeleccionado.nombre}`
             : ''}
         </p>
         {tipoMovimiento === 'salida' && resultado.monto_pagado != null && (
           <p className="registro-result__detail">
             Monto pagado: <strong>${Number(resultado.monto_pagado).toLocaleString('es-CO')}</strong>
-            {' AA '}
+            {' · '}
             Vuelto: <strong>${(Number(resultado.monto_pagado) - (Number(resultado.cantidad || 0) * Number(productoSeleccionado?.precio_venta || 0))).toLocaleString('es-CO')}</strong>
           </p>
         )}
@@ -268,7 +264,7 @@ function FormRegistro({ isAdmin, productos, productosCargando, proveedores, prov
             <span className="stock-item__val stock-item__val--before">{resultado.stock_anterior}</span>
             <span className="stock-item__lbl">Stock anterior</span>
           </div>
-          <div className="stock-arrow">Aaa</div>
+          <div className="stock-arrow">→</div>
           <div className="stock-item">
             <span className={`stock-item__val ${tipoMovimiento === 'salida' && resultado.nuevo_stock <= 0 ? 'stock-item__val--after-danger' : 'stock-item__val--after'}`}>
               {resultado.nuevo_stock}
@@ -315,14 +311,6 @@ function FormRegistro({ isAdmin, productos, productosCargando, proveedores, prov
         )}
       </div>
 
-      {/* Nota ajuste solo admin */}
-      {tipoMovimiento === 'ajuste' && (
-        <div className="admin-only-note">
-          <IconLock />
-          Los ajustes de inventario son exclusivos del Administrador y quedan registrados con trazabilidad completa.
-        </div>
-      )}
-
       {/* Error banner */}
       {apiError && (
         <div className="alert-banner alert-banner--error" role="alert">
@@ -341,11 +329,8 @@ function FormRegistro({ isAdmin, productos, productosCargando, proveedores, prov
         </label>
         {productosCargando ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--inv-text-muted)', fontSize: 13 }}>
-            <svg className="spinner" width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
-              <circle cx="12" cy="12" r="10" strokeWidth="3" stroke="currentColor" strokeOpacity="0.2" />
-              <path d="M12 2a10 10 0 0 1 10 10" strokeWidth="3" stroke="currentColor" strokeLinecap="round" />
-            </svg>
-            Cargando productosAaA
+            <IconSpinner />
+            Cargando productos...
           </div>
         ) : (
           <select
@@ -354,7 +339,7 @@ function FormRegistro({ isAdmin, productos, productosCargando, proveedores, prov
             value={form.id_producto}
             onChange={handleChange}
           >
-            <option value="">Aaa Selecciona un producto Aaa</option>
+            <option value="">— Selecciona un producto —</option>
             {productos.map(p => (
               <option key={p.id_producto} value={p.id_producto}>
                 {p.nombre} {p.codigo_barras ? `(${p.codigo_barras})` : ''}
@@ -363,7 +348,6 @@ function FormRegistro({ isAdmin, productos, productosCargando, proveedores, prov
           </select>
         )}
         {errors.id_producto && <span className="field__error-msg">{errors.id_producto}</span>}
-        {/* Stock badge */}
         {productoSeleccionado && (
           <span className={`field__stock-badge ${productoSeleccionado.stock_actual <= (productoSeleccionado.stock_minimo ?? 0) ? 'field__stock-badge--low' : 'field__stock-badge--ok'}`}>
             Stock disponible: <strong>{productoSeleccionado.stock_actual}</strong> unidades
@@ -371,7 +355,7 @@ function FormRegistro({ isAdmin, productos, productosCargando, proveedores, prov
         )}
       </div>
 
-      {/* AaaAaa Fila principal: Cantidad + campo condicional AaaAaa */}
+      {/* Fila principal: Cantidad + campo condicional */}
       <div className="form-row">
         <div className={`field ${errors.cantidad ? 'field--error' : ''}`}>
           <label className="field__label">
@@ -390,11 +374,10 @@ function FormRegistro({ isAdmin, productos, productosCargando, proveedores, prov
           {errors.cantidad && <span className="field__error-msg">{errors.cantidad}</span>}
         </div>
 
-        {/* Campos condicionales por tipo */}
         {tipoMovimiento === 'entrada' && (
           <div className="field">
             <label className="field__label">
-              NAA Factura <span className="field__optional">(opcional)</span>
+              Nº Factura <span className="field__optional">(opcional)</span>
             </label>
             <input
               type="text"
@@ -419,7 +402,7 @@ function FormRegistro({ isAdmin, productos, productosCargando, proveedores, prov
               value={form.motivo}
               onChange={handleChange}
             >
-              <option value="">Aaa Selecciona Aaa</option>
+              <option value="">— Selecciona —</option>
               {MOTIVOS_SALIDA.map(m => (
                 <option key={m.val} value={m.val}>{m.label}</option>
               ))}
@@ -457,7 +440,7 @@ function FormRegistro({ isAdmin, productos, productosCargando, proveedores, prov
               onChange={handleChange}
             >
               <option value="sobrante">Sobrante (+)</option>
-              <option value="faltante">Faltante (AEa)</option>
+              <option value="faltante">Faltante (−)</option>
             </select>
           </div>
         )}
@@ -471,11 +454,8 @@ function FormRegistro({ isAdmin, productos, productosCargando, proveedores, prov
           </label>
           {proveedoresCargando ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--inv-text-muted)', fontSize: 13 }}>
-              <svg className="spinner" width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
-                <circle cx="12" cy="12" r="10" strokeWidth="3" stroke="currentColor" strokeOpacity="0.2" />
-                <path d="M12 2a10 10 0 0 1 10 10" strokeWidth="3" stroke="currentColor" strokeLinecap="round" />
-              </svg>
-              Cargando proveedoresAaA
+              <IconSpinner />
+              Cargando proveedores...
             </div>
           ) : (
             <select
@@ -484,13 +464,13 @@ function FormRegistro({ isAdmin, productos, productosCargando, proveedores, prov
               value={form.id_proveedor}
               onChange={handleChange}
             >
-              <option value="">Aaa Sin proveedor Aaa</option>
+              <option value="">— Sin proveedor —</option>
               {proveedores.map(p => {
                 const id = p.id_proveedor ?? p.id
                 const nombre = p.razon_social ?? p.nombre_razon_social ?? p.nombre ?? `Proveedor #${id}`
                 return (
                   <option key={id} value={id}>
-                    {nombre}{p.nit_identificacion ? ` AA NIT: ${p.nit_identificacion}` : p.nit ? ` AA NIT: ${p.nit}` : ''}
+                    {nombre}{p.nit_identificacion ? ` · NIT: ${p.nit_identificacion}` : p.nit ? ` · NIT: ${p.nit}` : ''}
                   </option>
                 )
               })}
@@ -509,7 +489,7 @@ function FormRegistro({ isAdmin, productos, productosCargando, proveedores, prov
             type="text"
             name="motivo_ajuste"
             className="field__input"
-            placeholder="Ej: Conteo cAAclico, error de ingresoAaA"
+            placeholder="Ej: Conteo cíclico, error de ingreso..."
             maxLength={120}
             value={form.motivo_ajuste}
             onChange={handleChange}
@@ -527,7 +507,7 @@ function FormRegistro({ isAdmin, productos, productosCargando, proveedores, prov
           type="text"
           name="comentario"
           className="field__input"
-          placeholder="Observaciones adicionalesAaA"
+          placeholder="Observaciones adicionales..."
           maxLength={200}
           value={form.comentario}
           onChange={handleChange}
@@ -551,7 +531,7 @@ function FormRegistro({ isAdmin, productos, productosCargando, proveedores, prov
           disabled={loading}
         >
           {loading
-            ? <><IconSpinner /> RegistrandoAaA</>
+            ? <><IconSpinner /> Registrando...</>
             : tipoMovimiento === 'entrada' ? 'Registrar entrada'
             : tipoMovimiento === 'salida'  ? 'Registrar salida'
             : 'Registrar ajuste'
@@ -562,9 +542,9 @@ function FormRegistro({ isAdmin, productos, productosCargando, proveedores, prov
   )
 }
 
-/* AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA
-   HISTORIAL DE MOVIMIENTOS
-AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA */
+/* ─────────────────────────────────────────────
+   PÁGINA PRINCIPAL
+───────────────────────────────────────────── */
 export default function Inventory() {
   const { user } = useAuth()
   const isAdmin  = user?.rol === 'Administrador'
@@ -575,7 +555,6 @@ export default function Inventory() {
   const [proveedoresLoad, setProveedoresLoad] = useState(true)
   const { toasts, addToast } = useToast()
 
-  /* AaaAaa Carga de productos para selectores del formulario AaaAaa */
   useEffect(() => {
     async function cargarProductos() {
       setProductosLoad(true)
@@ -584,7 +563,7 @@ export default function Inventory() {
         const lista = resp?.data?.productos ?? resp?.productos ?? []
         setProductos(lista)
       } catch {
-        // fallo silencioso; el formulario mostrarAA selector vacAAo
+        // fallo silencioso
       } finally {
         setProductosLoad(false)
       }
@@ -592,13 +571,11 @@ export default function Inventory() {
     cargarProductos()
   }, [])
 
-  /* AaaAaa MS-08: Carga de proveedores activos AaaAaa */
   useEffect(() => {
     async function cargarProveedores() {
       setProveedoresLoad(true)
       try {
         const resp = await getProveedoresActivos()
-        // El endpoint puede responder { data: { items: [...] } } o { data: [...] } o directamente [...]
         const lista =
           resp?.data?.items ??
           resp?.data?.proveedores ??
@@ -608,7 +585,6 @@ export default function Inventory() {
           (Array.isArray(resp) ? resp : [])
         setProveedores(lista)
       } catch {
-        // fallo silencioso; el selector simplemente no aparecerAA con opciones
         setProveedores([])
       } finally {
         setProveedoresLoad(false)
@@ -623,12 +599,11 @@ export default function Inventory() {
 
   return (
     <div className="inv-page">
-      {/* Cabecera */}
       <div className="inv-page__header">
         <div className="inv-page__heading">
           <h2 className="inv-page__title">Movimientos de inventario</h2>
           <p className="inv-page__subtitle">
-            Registra entradas, salidas{isAdmin ? ' y ajustes' : ''} AA Consulta el historial
+            Registra entradas, salidas{isAdmin ? ' y ajustes' : ''} · Consulta el historial
           </p>
         </div>
       </div>
@@ -655,7 +630,7 @@ export default function Inventory() {
           />
           <div style={{ marginTop: '18px' }}>
             <Link to="/historial" className="btn btn--ghost">
-              Ver historial completo Aaa
+              Ver historial completo →
             </Link>
           </div>
         </div>

@@ -1,6 +1,6 @@
 /**
- * Audit.jsx Aaa Invory | MS-09 Frontend
- * Vista: AuditorAAa y Trazabilidad
+ * Audit.jsx | MS-09 Frontend
+ * Vista: Auditoría y Trazabilidad
  *
  * Ruta:  /auditoria
  * Acceso: Solo Administrador (controlado por AdminRoute en App.jsx)
@@ -11,9 +11,9 @@ import { useAuth } from '../../hooks/useAuth'
 import { getAuditLogs } from '../../api/audit.js'
 import './audit.css'
 
-/* AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA
-   AACONOS SVG
-AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA */
+/* ─────────────────────────────────────────────
+   ICONOS SVG
+───────────────────────────────────────────── */
 const IconAlert = () => (
   <svg className="inline-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
     <circle cx="12" cy="12" r="10" />
@@ -74,15 +74,15 @@ const IconShield = () => (
   </svg>
 )
 
-/* AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA
+/* ─────────────────────────────────────────────
    HELPERS
-AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA */
+───────────────────────────────────────────── */
 const MODULOS = [
   { val: '',           label: 'Todos' },
-  { val: 'auth',       label: 'AutenticaciAAn' },
+  { val: 'auth',       label: 'Autenticación' },
   { val: 'usuarios',   label: 'Usuarios' },
   { val: 'productos',  label: 'Productos' },
-  { val: 'categorias', label: 'CategorAAas' },
+  { val: 'categorias', label: 'Categorías' },
   { val: 'inventario', label: 'Inventario' },
 ]
 
@@ -93,9 +93,9 @@ const ACCIONES = [
   { val: 'crear_usuario',          label: 'Crear usuario' },
   { val: 'actualizar_usuario',     label: 'Actualizar usuario' },
   { val: 'eliminar_usuario',       label: 'Eliminar usuario' },
-  { val: 'crear_categoria',        label: 'Crear categorAAa' },
-  { val: 'actualizar_categoria',   label: 'Actualizar categorAAa' },
-  { val: 'eliminar_categoria',     label: 'Eliminar categorAAa' },
+  { val: 'crear_categoria',        label: 'Crear categoría' },
+  { val: 'actualizar_categoria',   label: 'Actualizar categoría' },
+  { val: 'eliminar_categoria',     label: 'Eliminar categoría' },
   { val: 'crear_producto',         label: 'Crear producto' },
   { val: 'actualizar_producto',    label: 'Actualizar producto' },
   { val: 'eliminar_producto',      label: 'Eliminar producto' },
@@ -126,17 +126,17 @@ function getModuleVariant(modulo) {
 }
 
 function formatAccion(accion) {
-  if (!accion) return 'Aaa'
+  if (!accion) return '—'
   return String(accion).replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
 }
 
 function formatModulo(modulo) {
-  if (!modulo) return 'Aaa'
+  if (!modulo) return '—'
   return String(modulo).charAt(0).toUpperCase() + String(modulo).slice(1)
 }
 
 function formatFecha(iso) {
-  if (!iso) return { fecha: 'Aaa', hora: '' }
+  if (!iso) return { fecha: '—', hora: '' }
   const d = new Date(iso)
   if (Number.isNaN(d.getTime())) return { fecha: iso, hora: '' }
   const dd = String(d.getDate()).padStart(2, '0')
@@ -149,15 +149,15 @@ function formatFecha(iso) {
 }
 
 function formatValue(v) {
-  if (v === null || v === undefined) return 'Aaa'
-  if (typeof v === 'boolean') return v ? 'SAA' : 'No'
+  if (v === null || v === undefined) return '—'
+  if (typeof v === 'boolean') return v ? 'Sí' : 'No'
   if (typeof v === 'object') return JSON.stringify(v, null, 2)
   return String(v)
 }
 
-/* AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA
+/* ─────────────────────────────────────────────
    BADGES
-AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA */
+───────────────────────────────────────────── */
 function BadgeAccion({ accion }) {
   const variant = getActionVariant(accion)
   return (
@@ -177,9 +177,9 @@ function BadgeModulo({ modulo }) {
   )
 }
 
-/* AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA
+/* ─────────────────────────────────────────────
    MODAL DETALLE
-AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA */
+───────────────────────────────────────────── */
 function DetailModal({ log, onClose }) {
   useEffect(() => {
     if (!log) return
@@ -216,7 +216,7 @@ function DetailModal({ log, onClose }) {
                 {formatAccion(log.accion)}
               </h3>
               <p className="modal__subtitle">
-                {fecha} AA {hora}
+                {fecha} · {hora}
               </p>
             </div>
           </div>
@@ -226,9 +226,9 @@ function DetailModal({ log, onClose }) {
         </div>
 
         <div className="modal__body audit-modal__body">
-          {/* InformaciAAn general */}
+          {/* Información general */}
           <section className="audit-section">
-            <h4 className="audit-section__title">InformaciAAn general</h4>
+            <h4 className="audit-section__title">Información general</h4>
             <dl className="audit-info-grid">
               <div className="audit-info-row">
                 <dt>Usuario</dt>
@@ -236,8 +236,8 @@ function DetailModal({ log, onClose }) {
                   {log.usuario?.nombre ? (
                     <>
                       {log.usuario.nombre}
-                      {log.usuario.rol && <span className="audit-meta"> AA {log.usuario.rol}</span>}
-                      {log.usuario.id_usuario && <span className="audit-meta"> AA ID {log.usuario.id_usuario}</span>}
+                      {log.usuario.rol && <span className="audit-meta"> · {log.usuario.rol}</span>}
+                      {log.usuario.id_usuario && <span className="audit-meta"> · ID {log.usuario.id_usuario}</span>}
                     </>
                   ) : (
                     <span className="text-muted">Sistema</span>
@@ -245,19 +245,19 @@ function DetailModal({ log, onClose }) {
                 </dd>
               </div>
               <div className="audit-info-row">
-                <dt>MAAdulo</dt>
+                <dt>Módulo</dt>
                 <dd><BadgeModulo modulo={log.modulo} /></dd>
               </div>
               <div className="audit-info-row">
                 <dt>Entidad</dt>
                 <dd>
-                  {log.entidad ?? 'Aaa'}
-                  {log.id_entidad ? <span className="audit-meta"> AA ID {log.id_entidad}</span> : null}
+                  {log.entidad ?? '—'}
+                  {log.id_entidad ? <span className="audit-meta"> · ID {log.id_entidad}</span> : null}
                 </dd>
               </div>
               {log.id_sesion && (
                 <div className="audit-info-row">
-                  <dt>SesiAAn</dt>
+                  <dt>Sesión</dt>
                   <dd className="audit-mono">{log.id_sesion}</dd>
                 </div>
               )}
@@ -292,7 +292,7 @@ function DetailModal({ log, onClose }) {
                   <tr>
                     <th>Campo</th>
                     <th>Antes</th>
-                    <th>DespuAAs</th>
+                    <th>Después</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -300,10 +300,10 @@ function DetailModal({ log, onClose }) {
                     <tr key={campo}>
                       <td className="audit-changes-table__field">{campo}</td>
                       <td className="audit-changes-table__before">
-                        {previos[campo] === undefined ? <span className="text-muted">Aaa</span> : formatValue(previos[campo])}
+                        {previos[campo] === undefined ? <span className="text-muted">—</span> : formatValue(previos[campo])}
                       </td>
                       <td className="audit-changes-table__after">
-                        {nuevos[campo] === undefined ? <span className="text-muted">Aaa</span> : formatValue(nuevos[campo])}
+                        {nuevos[campo] === undefined ? <span className="text-muted">—</span> : formatValue(nuevos[campo])}
                       </td>
                     </tr>
                   ))}
@@ -323,9 +323,9 @@ function DetailModal({ log, onClose }) {
   )
 }
 
-/* AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA
+/* ─────────────────────────────────────────────
    COMPONENTE PRINCIPAL
-AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA */
+───────────────────────────────────────────── */
 export default function Audit() {
   const { user } = useAuth()
 
@@ -337,13 +337,11 @@ export default function Audit() {
   const [bannerMsg, setBannerMsg] = useState(null)
   const [selectedLog, setSelectedLog] = useState(null)
 
-  // Filtros (estado del formulario)
   const [fUsuario, setFUsuario] = useState('')
   const [fModulo, setFModulo]   = useState('')
   const [fAccion, setFAccion]   = useState('')
   const [fFecha,  setFFecha]    = useState('')
 
-  // Filtros aplicados (los que estAAn realmente vigentes en la consulta)
   const filtrosActivosRef = useRef({})
 
   const PAGE_SIZE = 20
@@ -360,7 +358,7 @@ export default function Audit() {
       setTotalPages(data.totalPages ?? 1)
       setPage(pg)
     } catch (err) {
-      setBannerMsg(err.message ?? 'No fue posible cargar los logs de auditorAAa.')
+      setBannerMsg(err.message ?? 'No fue posible cargar los logs de auditoría.')
       setLogs([])
       setTotal(0)
       setTotalPages(1)
@@ -403,9 +401,9 @@ export default function Audit() {
       {/* Cabecera */}
       <div className="audit-page__header">
         <div className="audit-page__heading">
-          <h2 className="audit-page__title">AuditorAAa y trazabilidad</h2>
+          <h2 className="audit-page__title">Auditoría y trazabilidad</h2>
           <p className="audit-page__subtitle">
-            Registro inmutable de eventos crAAticos del sistema AA Solo lectura
+            Registro inmutable de eventos críticos del sistema · Solo lectura
           </p>
         </div>
         <div className="audit-role-chip">
@@ -431,7 +429,7 @@ export default function Audit() {
               />
             </div>
             <div className="filter-field">
-              <label className="filter-label">MAAdulo</label>
+              <label className="filter-label">Módulo</label>
               <select
                 className="filter-select"
                 value={fModulo}
@@ -443,7 +441,7 @@ export default function Audit() {
               </select>
             </div>
             <div className="filter-field">
-              <label className="filter-label">AcciAAn</label>
+              <label className="filter-label">Acción</label>
               <select
                 className="filter-select"
                 value={fAccion}
@@ -517,8 +515,8 @@ export default function Audit() {
               <tr>
                 <th>Fecha y hora</th>
                 <th>Usuario</th>
-                <th>MAAdulo</th>
-                <th>AcciAAn</th>
+                <th>Módulo</th>
+                <th>Acción</th>
                 <th>Entidad</th>
                 <th className="th-actions">Detalle</th>
               </tr>
@@ -528,7 +526,7 @@ export default function Audit() {
                 <tr>
                   <td colSpan={6} className="table-empty">
                     <IconSpinner />
-                    <span>Cargando registros de auditorAAaAaA</span>
+                    <span>Cargando registros de auditoría...</span>
                   </td>
                 </tr>
               ) : !logs.length ? (
@@ -561,7 +559,7 @@ export default function Audit() {
                     <td><BadgeModulo modulo={log.modulo} /></td>
                     <td><BadgeAccion accion={log.accion} /></td>
                     <td>
-                      <span className="td-entidad">{log.entidad ?? 'Aaa'}</span>
+                      <span className="td-entidad">{log.entidad ?? '—'}</span>
                       {log.id_entidad && (
                         <span className="td-entidad__id">ID {log.id_entidad}</span>
                       )}
@@ -583,11 +581,11 @@ export default function Audit() {
           </table>
         </div>
 
-        {/* PaginaciAAn */}
+        {/* Paginación */}
         <div className="pagination">
           <span className="pagination__info">
             {total > 0
-              ? `Mostrando ${(page - 1) * PAGE_SIZE + 1}Aaa${Math.min(page * PAGE_SIZE, total)} de ${total} ${total === 1 ? 'registro' : 'registros'}`
+              ? `Mostrando ${(page - 1) * PAGE_SIZE + 1}–${Math.min(page * PAGE_SIZE, total)} de ${total} ${total === 1 ? 'registro' : 'registros'}`
               : 'Sin resultados'}
           </span>
           <div className="pagination__controls">
@@ -595,7 +593,7 @@ export default function Audit() {
               className="page-btn"
               onClick={() => cambiarPagina(page - 1)}
               disabled={page <= 1 || loading}
-              aria-label="PAAgina anterior"
+              aria-label="Página anterior"
             >
               <IconChevronLeft />
             </button>
@@ -620,7 +618,7 @@ export default function Audit() {
               className="page-btn"
               onClick={() => cambiarPagina(page + 1)}
               disabled={page >= totalPages || loading}
-              aria-label="PAAgina siguiente"
+              aria-label="Página siguiente"
             >
               <IconChevronRight />
             </button>
