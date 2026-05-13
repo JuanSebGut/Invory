@@ -1,0 +1,18 @@
+{
+  "scripts": {
+    "setup:deps": "node scripts/setup-deps.js",
+    "verify:all": "npm --prefix services/auth-service test && npm --prefix services/user-service test && npm --prefix services/category-service test && npm --prefix services/product-service test && npm --prefix services/inventory-service test && npm --prefix services/audit-service test && npm --prefix services/export-service test && npm --prefix api-gateway test",
+    "verify:ms02": "npm --prefix services/user-service test",
+    "verify:ms04": "npm --prefix services/product-service test",
+    "verify:ms05": "npm --prefix services/inventory-service test",
+    "verify:ms06": "npm --prefix services/inventory-service test",
+    "verify:ms09": "npm --prefix services/audit-service test",
+    "verify:gateway": "npm --prefix api-gateway test"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "pg": "^8.20.0"
+  }
+}

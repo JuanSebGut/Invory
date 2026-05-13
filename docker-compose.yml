@@ -1,0 +1,238 @@
+services:
+  auth-service:
+    build:
+      context: ./services/auth-service
+      dockerfile: Dockerfile
+    container_name: invory-auth-service
+    environment:
+      PORT: 3002
+      JWT_SECRET: invory-dev-secret
+      JWT_EXPIRES_IN: 30m
+      MAX_LOGIN_ATTEMPTS: 3
+      LOCK_TIME_MINUTES: 15
+      DEMO_USER_EMAIL: admin@invory.com
+      DEMO_USER_PASSWORD: Admin1234
+      DEMO_USER_NAME: Administrador Demo
+      DEMO_USER_ROLE: Administrador
+      MS09_AUDIT_WEBHOOK_URL: http://audit-service:3006/api/audit/events
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: invory
+      DB_NAME: invory
+    ports:
+      - "3002:3002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  product-service:
+    build:
+      context: .
+      dockerfile: services/product-service/Dockerfile
+    container_name: invory-product-service
+    environment:
+      PORT: 3001
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: invory
+      DB_NAME: invory
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    
+  category-service:
+    build:
+      context: .
+      dockerfile: services/category-service/Dockerfile
+    container_name: invory-category-service
+    environment:
+      PORT: 3003
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: invory
+      DB_NAME: invory
+    ports:
+      - "3003:3003"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  user-service:
+    build:
+      context: ./services/user-service
+      dockerfile: Dockerfile
+    container_name: invory-user-service
+    environment:
+      PORT: 3004
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: invory
+      DB_NAME: invory
+      MS09_AUDIT_WEBHOOK_URL: http://audit-service:3006/api/audit/events
+    ports:
+      - "3004:3004"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  inventory-service:
+    build:
+      context: .
+      dockerfile: services/inventory-service/Dockerfile
+    container_name: invory-inventory-service
+    environment:
+      PORT: 3005
+      AUTH_SERVICE_URL: http://auth-service:3002
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: invory
+      DB_NAME: invory
+      MS06_MOVEMENT_WEBHOOK_URL: ""
+      MS09_MOVEMENT_WEBHOOK_URL: http://audit-service:3006/api/audit/events
+    ports:
+      - "3005:3005"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+    restart: unless-stopped
+
+  audit-service:
+    build:
+      context: .
+      dockerfile: services/audit-service/Dockerfile
+    container_name: invory-audit-service
+    environment:
+      PORT: 3006
+      AUTH_SERVICE_URL: http://auth-service:3002
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: invory
+      DB_NAME: invory
+    ports:
+      - "3006:3006"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+    restart: unless-stopped
+
+  export-service:
+    build:
+      context: .
+      dockerfile: services/export-service/Dockerfile
+    container_name: invory-export-service
+    environment:
+      PORT: 3007
+      AUTH_SERVICE_URL: http://auth-service:3002
+      INVENTORY_SERVICE_URL: http://inventory-service:3005
+      AUDIT_SERVICE_URL: http://audit-service:3006
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: invory
+      DB_NAME: invory
+    ports:
+      - "3007:3007"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+      inventory-service:
+        condition: service_started
+      audit-service:
+        condition: service_started
+      supplier-service:
+        condition: service_started
+    restart: unless-stopped
+
+  supplier-service:
+    build:
+      context: .
+      dockerfile: services/supplier-service/Dockerfile
+    container_name: invory-supplier-service
+    environment:
+      PORT: 3008
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: invory
+      DB_NAME: invory
+    ports:
+      - "3008:3008"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    container_name: invory-api-gateway
+    environment:
+      PORT: 3000
+      AUTH_SERVICE_URL: http://auth-service:3002
+      PRODUCT_SERVICE_URL: http://product-service:3001
+      CATEGORY_SERVICE_URL: http://category-service:3003
+      USER_SERVICE_URL: http://user-service:3004
+      INVENTORY_SERVICE_URL: http://inventory-service:3005
+      AUDIT_SERVICE_URL: http://audit-service:3006
+      EXPORT_SERVICE_URL: http://export-service:3007
+      PROVIDER_SERVICE_URL: http://supplier-service:3008
+    ports:
+      - "3000:3000"
+    depends_on:
+      auth-service:
+        condition: service_started
+      product-service:
+        condition: service_started
+      category-service:
+        condition: service_started
+      user-service:
+        condition: service_started
+      inventory-service:
+        condition: service_started
+      audit-service:
+        condition: service_started
+      export-service:
+        condition: service_started
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: invory-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: invory
+      POSTGRES_DB: invory
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d invory"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    volumes:
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+      - invory_pg_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  invory_pg_data:
+

@@ -1,0 +1,16 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+:root{--ash-grey:#cad2c5;--muted-teal:#84a98c;--deep-teal:#52796f;--dark-slate-grey:#354f52;--charcoal-blue:#2f3e46;--success-green:#2d6a4f;--warning-orange:#f4a261;--danger-red:#d62828;--white:#fff;--light-bg:#f8f9fa;--border-light:#dfe5dc;--font-main:'Inter',system-ui,sans-serif;--font-mono:'JetBrains Mono',monospace}
+.profile-page{display:flex;flex-direction:column;align-items:center;padding:40px 24px;min-height:100%;background:var(--light-bg);font-family:var(--font-main)}
+.profile-container{width:100%;max-width:560px;display:flex;flex-direction:column;gap:20px}
+.profile-header{display:flex;flex-direction:column;align-items:center;gap:12px;padding:28px 20px;background:var(--white);border:1px solid var(--border-light);border-radius:12px;text-align:center}
+.profile-avatar-lg{width:80px;height:80px;border-radius:50%;background:var(--deep-teal);border:3px solid var(--muted-teal);display:grid;place-items:center;font-size:28px;font-weight:700;color:var(--white)}
+.profile-name{font-size:20px;font-weight:700;color:var(--charcoal-blue);margin:0}
+.profile-role-badge{display:inline-flex;align-items:center;padding:4px 14px;border-radius:999px;background:rgba(82,121,111,.12);border:1px solid var(--muted-teal);color:var(--deep-teal);font-size:12px;font-weight:600}
+.profile-card{background:var(--white);border:1px solid var(--border-light);border-radius:12px;overflow:hidden}
+.profile-card__header{padding:16px 22px;border-bottom:1px solid var(--border-light);font-size:14px;font-weight:700;color:var(--charcoal-blue)}
+.profile-card__body{padding:22px;display:flex;flex-direction:column;gap:10px}
+.profile-card__body input{padding:10px 12px;border:1px solid var(--border-light);border-radius:8px}
+.profile-field-readonly{display:flex;flex-direction:column;gap:4px}
+.profile-field-readonly label{font-size:11px;font-weight:600;color:var(--muted-teal);text-transform:uppercase;letter-spacing:.4px}
+.profile-field-readonly span{font-size:14px;color:var(--charcoal-blue);padding:8px 0;border-bottom:1px solid var(--border-light)}
+.btn--primary{background:var(--deep-teal);color:var(--white);border:1px solid var(--deep-teal);border-radius:8px;padding:10px 20px;font-family:var(--font-main);font-size:13px;font-weight:600;cursor:pointer}

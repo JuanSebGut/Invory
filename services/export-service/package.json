@@ -1,0 +1,21 @@
+{
+  "name": "export-service",
+  "version": "1.0.0",
+  "description": "MS-12 Servicio de Exportacion de Datos",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test --experimental-test-isolation=none tests/**/*.test.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.3.1",
+    "exceljs": "^4.4.0",
+    "express": "^5.1.0",
+    "pdfkit": "^0.17.2",
+    "pg": "^8.20.0"
+  },
+  "devDependencies": {
+    "supertest": "^7.1.4"
+  }
+}
