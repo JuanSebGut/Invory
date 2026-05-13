@@ -1,14 +1,14 @@
-# GuÃ­a de integraciÃ³n Frontend â€” MS-02 User Service
+﻿# GuÃƒÂ­a de integraciÃƒÂ³n Frontend Ã¢â‚¬â€ MS-02 User Service
 
 **Proyecto:** INVENTARIO INVORY  
-**Ãmbito:** Consumo desde cliente web de la gestiÃ³n de usuarios  
-**Ãšltima actualizaciÃ³n:** 2026-04-08
+**ÃƒÂmbito:** Consumo desde cliente web de la gestiÃƒÂ³n de usuarios  
+**ÃƒÅ¡ltima actualizaciÃƒÂ³n:** 2026-04-08
 
 ---
 
 ## 1) Objetivo
 
-Definir el contrato para que frontend consuma el mÃ³dulo de usuarios (MS-02) de forma consistente y sin exponer datos sensibles.
+Definir el contrato para que frontend consuma el mÃƒÂ³dulo de usuarios (MS-02) de forma consistente y sin exponer datos sensibles.
 
 Base URL local recomendada del servicio:
 
@@ -16,19 +16,19 @@ Base URL local recomendada del servicio:
 http://localhost:3003
 ```
 
-> Nota: en integraciÃ³n con gateway, estos endpoints deben publicarse bajo una ruta unificada (por ejemplo `/api/users`).
+> Nota: en integraciÃƒÂ³n con gateway, estos endpoints deben publicarse bajo una ruta unificada (por ejemplo `/api/users`).
 
 ---
 
 ## 2) Endpoints disponibles
 
-| MÃ©todo | Endpoint | Uso |
+| MÃƒÂ©todo | Endpoint | Uso |
 |---|---|---|
 | POST | `/api/users` | Crear usuario |
-| GET | `/api/users` | Listar usuarios con paginaciÃ³n y filtros |
+| GET | `/api/users` | Listar usuarios con paginaciÃƒÂ³n y filtros |
 | GET | `/api/users/:id` | Obtener detalle de usuario |
-| PUT | `/api/users/:id` | ActualizaciÃ³n parcial de usuario |
-| DELETE | `/api/users/:id` | Borrado lÃ³gico (deshabilitar) |
+| PUT | `/api/users/:id` | ActualizaciÃƒÂ³n parcial de usuario |
+| DELETE | `/api/users/:id` | Borrado lÃƒÂ³gico (deshabilitar) |
 
 ---
 
@@ -43,7 +43,7 @@ POST /api/users
 Content-Type: application/json
 
 {
-  "nombre": "Operador de Bodega",
+  "nombre": "Empleado de Bodega",
   "correo": "operador@invory.test",
   "contrasena": "ClaveSegura123",
   "id_rol": 2,
@@ -59,7 +59,7 @@ Content-Type: application/json
   "data": {
     "id_usuario": 10,
     "id_rol": 2,
-    "nombre": "Operador de Bodega",
+    "nombre": "Empleado de Bodega",
     "correo": "operador@invory.test",
     "estado": true,
     "fecha_creacion": "2026-04-08T20:30:00.000Z",
@@ -105,7 +105,7 @@ GET /api/users?page=1&size=10&estado=activo
 }
 ```
 
-## 3.3 ActualizaciÃ³n parcial
+## 3.3 ActualizaciÃƒÂ³n parcial
 
 ### Request
 
@@ -114,7 +114,7 @@ PUT /api/users/2
 Content-Type: application/json
 
 {
-  "nombre": "Operador Turno Noche",
+  "nombre": "Empleado Turno Noche",
   "estado": "inactivo"
 }
 ```
@@ -127,14 +127,14 @@ Content-Type: application/json
   "data": {
     "id_usuario": 2,
     "id_rol": 2,
-    "nombre": "Operador Turno Noche",
+    "nombre": "Empleado Turno Noche",
     "correo": "operador@invory.test",
     "estado": false
   }
 }
 ```
 
-## 3.4 Borrado lÃ³gico
+## 3.4 Borrado lÃƒÂ³gico
 
 ### Request
 
@@ -158,7 +158,7 @@ x-user-role: Administrador
 
 ---
 
-## 4) Regla de negocio crÃ­tica
+## 4) Regla de negocio crÃƒÂ­tica
 
 Si un administrador intenta deshabilitar su propio usuario, la API debe responder:
 
@@ -172,7 +172,7 @@ Ejemplo de respuesta:
   "success": false,
   "error": {
     "code": "ADMIN_SELF_DISABLE_FORBIDDEN",
-    "message": "Un administrador no puede deshabilitarse a sÃ­ mismo"
+    "message": "Un administrador no puede deshabilitarse a sÃƒÂ­ mismo"
   }
 }
 ```
@@ -181,10 +181,10 @@ Ejemplo de respuesta:
 
 ## 5) Recomendaciones para frontend
 
-1. Mantener paginaciÃ³n en estado global (`page`, `size`, `estado`).
+1. Mantener paginaciÃƒÂ³n en estado global (`page`, `size`, `estado`).
 2. Normalizar respuestas de lista en un adaptador (`items`, `total`, `totalPages`).
-3. Para deshabilitar usuario, mostrar confirmaciÃ³n explÃ­cita antes de llamar `DELETE`.
-4. Mapear cÃ³digos de error a mensajes de UI:
+3. Para deshabilitar usuario, mostrar confirmaciÃƒÂ³n explÃƒÂ­cita antes de llamar `DELETE`.
+4. Mapear cÃƒÂ³digos de error a mensajes de UI:
    - `USER_NOT_FOUND`
    - `USER_EMAIL_ALREADY_EXISTS`
    - `VALIDATION_ERROR`
@@ -192,11 +192,12 @@ Ejemplo de respuesta:
 
 ---
 
-## 6) Lista de verificaciÃ³n para integraciÃ³n frontend
+## 6) Lista de verificaciÃƒÂ³n para integraciÃƒÂ³n frontend
 
 - [ ] Alta de usuario funcional desde formulario.
-- [ ] Tabla de usuarios con paginaciÃ³n real y filtro por estado.
-- [ ] EdiciÃ³n parcial sin sobreescribir campos no enviados.
-- [ ] Flujo de deshabilitaciÃ³n (DELETE lÃ³gico) funcionando.
+- [ ] Tabla de usuarios con paginaciÃƒÂ³n real y filtro por estado.
+- [ ] EdiciÃƒÂ³n parcial sin sobreescribir campos no enviados.
+- [ ] Flujo de deshabilitaciÃƒÂ³n (DELETE lÃƒÂ³gico) funcionando.
 - [ ] Manejo de error `ADMIN_SELF_DISABLE_FORBIDDEN` validado en UI.
-- [ ] ContraseÃ±a nunca renderizada ni almacenada en estado de frontend.
+- [ ] ContraseÃƒÂ±a nunca renderizada ni almacenada en estado de frontend.
+

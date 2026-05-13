@@ -1,7 +1,7 @@
-# Entregable Backend MS-03 â€” Servicio de Gestion de Categorias
+﻿# Entregable Backend MS-03 Ã¢â‚¬â€ Servicio de Gestion de Categorias
 
 **Proyecto:** INVENTARIO INVORY  
-**MÃ³dulo principal:** MS-03 (Category Service)  
+**MÃƒÂ³dulo principal:** MS-03 (Category Service)  
 **Fecha:** 2026-04-10
 
 ---
@@ -20,7 +20,7 @@ Implementar el microservicio MS-03 para la gestion de categorias, incluyendo:
 - Se agregaron rutas en `api-gateway`
 - Se validaron roles:
   - Administrador: POST, PUT, DELETE
-  - Administrador y Operador: GET
+  - Administrador y Empleado: GET
 - Se agrego validacion de unicidad case-insensitive
 - Se agrego validacion para impedir deshabilitar categorias con productos activos
 - Se agregaron pruebas de integracion
@@ -53,4 +53,5 @@ Implementar el microservicio MS-03 para la gestion de categorias, incluyendo:
 - Validacion de permisos desde gateway
 
 ## Resultado
-La implementacion fue validada con pruebas automÃ¡ticas y el flujo del gateway.
+La implementacion fue validada con pruebas automÃƒÂ¡ticas y el flujo del gateway.
+

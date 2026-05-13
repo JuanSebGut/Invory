@@ -1,5 +1,6 @@
 const bcrypt = require('bcryptjs');
 const { createHttpError } = require('../models/user.model');
+const DEMO_ADMIN_EMAIL = 'admin@invory.com';
 
 function isAdminRole(role) {
   if (!role) {
@@ -111,6 +112,13 @@ class UserService {
     }
 
     this.validateAdminSelfDisable(actorContext, idUsuario, patch.estado);
+    if (patch.estado === false && current.correo === DEMO_ADMIN_EMAIL) {
+      throw createHttpError(
+        403,
+        'DEMO_ADMIN_PROTECTED',
+        'El administrador demo no puede ser deshabilitado'
+      );
+    }
 
     const patchToPersist = { ...patch };
     if (patch.contrasena) {
@@ -139,6 +147,13 @@ class UserService {
     }
 
     this.validateAdminSelfDisable(actorContext, idUsuario, false);
+    if (current.correo === DEMO_ADMIN_EMAIL) {
+      throw createHttpError(
+        403,
+        'DEMO_ADMIN_PROTECTED',
+        'El administrador demo no puede ser deshabilitado'
+      );
+    }
 
     const updated = await this.repository.softDeleteUser(idUsuario);
     const safeCurrent = sanitizeUser(current);

@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 /**
  * Rutas del API Gateway hacia el inventory-service (MS-05).
@@ -7,32 +7,32 @@
  *   - MS-06 (Alertas de stock):    GET /api/inventory/alerts
  *   - MS-09 (Movimientos auditados): GET y POST /api/inventory/movements
  *
- * ConvenciÃ³n del proxy:
- *   - El gateway expone TODAS sus rutas bajo /api/* (estÃ¡ndar del proyecto).
+ * ConvenciÃƒÂ³n del proxy:
+ *   - El gateway expone TODAS sus rutas bajo /api/* (estÃƒÂ¡ndar del proyecto).
  *   - El inventory-service expone:
  *       /inventory/alerts         (rama MS-06: stock alerts)
  *       /api/inventory/movements  (rama MS-09: movimientos)
- *     porque histÃ³ricamente ambas historias se desarrollaron por separado y
- *     cada una eligiÃ³ su propio prefijo. El gateway absorbe esa diferencia.
+ *     porque histÃƒÂ³ricamente ambas historias se desarrollaron por separado y
+ *     cada una eligiÃƒÂ³ su propio prefijo. El gateway absorbe esa diferencia.
  *
- * Reglas de autorizaciÃ³n (Requisito R02):
- *   - Consultar alertas y movimientos: Administrador y Operador.
- *   - Registrar movimientos:           Administrador y Operador.
+ * Reglas de autorizaciÃƒÂ³n (Requisito R02):
+ *   - Consultar alertas y movimientos: Administrador y Empleado.
+ *   - Registrar movimientos:           Administrador y Empleado.
  *
- * Las dos rutas requieren JWT vÃ¡lido. Esa validaciÃ³n la hace el authMiddleware,
+ * Las dos rutas requieren JWT vÃƒÂ¡lido. Esa validaciÃƒÂ³n la hace el authMiddleware,
  * que llama internamente a /api/auth/verify del auth-service.
  */
 
 const { Router } = require('express');
 
-const { ADMINISTRADOR, OPERADOR, PERMISOS } = require('../../../shared/constants/roles');
+const { ADMINISTRADOR, EMPLEADO, PERMISOS } = require('../../../shared/constants/roles');
 const { requireRoles } = require('../middlewares/role.middleware');
 
 /**
  * Construye una URL upstream con query string preservada.
  *
- * Filtra valores undefined / null / '' para no ensuciar la URL con parÃ¡metros
- * vacÃ­os cuando el cliente no los envÃ­a.
+ * Filtra valores undefined / null / '' para no ensuciar la URL con parÃƒÂ¡metros
+ * vacÃƒÂ­os cuando el cliente no los envÃƒÂ­a.
  */
 function buildProxyUrl(baseUrl, path, query = {}) {
   const url = new URL(path, baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`);
@@ -47,7 +47,7 @@ function buildProxyUrl(baseUrl, path, query = {}) {
 }
 
 /**
- * ReenvÃ­a la respuesta del servicio upstream conservando status, content-type
+ * ReenvÃƒÂ­a la respuesta del servicio upstream conservando status, content-type
  * y cuerpo. Si el upstream responde JSON, lo parseamos y volvemos a serializar
  * con res.json para garantizar headers correctos.
  */
@@ -67,11 +67,11 @@ async function sendProxyResponse(upstreamResponse, res) {
 }
 
 /**
- * Forwardea la peticiÃ³n al inventory-service propagando el JWT y los headers
- * x-user-* que el servicio downstream usa para auditorÃ­a sin tener que volver
+ * Forwardea la peticiÃƒÂ³n al inventory-service propagando el JWT y los headers
+ * x-user-* que el servicio downstream usa para auditorÃƒÂ­a sin tener que volver
  * a parsear el token.
  *
- * Nota: el inventory-service tambiÃ©n valida el token contra el auth-service
+ * Nota: el inventory-service tambiÃƒÂ©n valida el token contra el auth-service
  * (zero-trust), pero los headers x-user-* le ahorran ese roundtrip cuando
  * solo necesita identificar al actor para registrar el movimiento.
  */
@@ -111,27 +111,27 @@ async function proxyToInventory({
  *
  * @param {object} options
  * @param {string} options.inventoryServiceUrl  Base URL del inventory-service.
- * @param {Function} [options.authMiddleware]   Middleware de validaciÃ³n de JWT.
- *   Si no se pasa, las rutas quedan SIN protecciÃ³n (modo legacy de MS-06 puro,
- *   solo Ãºtil para tests aislados con fetch mockeado).
- * @param {Function} [options.fetchImpl=fetch]  ImplementaciÃ³n de fetch
+ * @param {Function} [options.authMiddleware]   Middleware de validaciÃƒÂ³n de JWT.
+ *   Si no se pasa, las rutas quedan SIN protecciÃƒÂ³n (modo legacy de MS-06 puro,
+ *   solo ÃƒÂºtil para tests aislados con fetch mockeado).
+ * @param {Function} [options.fetchImpl=fetch]  ImplementaciÃƒÂ³n de fetch
  *   (inyectable para tests).
  */
 function createInventoryRouter({ inventoryServiceUrl, authMiddleware, fetchImpl = fetch } = {}) {
   const router = Router();
 
-  // --- En modo "legacy MS-06" (sin authMiddleware) las rutas son pÃºblicas. -
+  // --- En modo "legacy MS-06" (sin authMiddleware) las rutas son pÃƒÂºblicas. -
   // Esto preserva la compatibilidad con inventory-alerts.proxy.test.js, que
   // construye la app con createApp({ fetchImpl }) y mockea el upstream.
   const guards = authMiddleware
-    ? [authMiddleware, requireRoles([ADMINISTRADOR, OPERADOR])]
+    ? [authMiddleware, requireRoles([ADMINISTRADOR, EMPLEADO])]
     : [];
 
   // ---------------------------------------------------------------------------
-  // MS-06 â€” Alertas de stock
+  // MS-06 Ã¢â‚¬â€ Alertas de stock
   // ---------------------------------------------------------------------------
   // El inventory-service publica este endpoint en /inventory/alerts (sin /api),
-  // por compatibilidad histÃ³rica con la rama MS-06.
+  // por compatibilidad histÃƒÂ³rica con la rama MS-06.
   router.get('/alerts', ...guards, async (req, res) => {
     try {
       const upstreamUrl = buildProxyUrl(
@@ -156,11 +156,11 @@ function createInventoryRouter({ inventoryServiceUrl, authMiddleware, fetchImpl 
   });
 
   // ---------------------------------------------------------------------------
-  // MS-09 â€” Movimientos de inventario (con auditorÃ­a)
+  // MS-09 Ã¢â‚¬â€ Movimientos de inventario (con auditorÃƒÂ­a)
   // ---------------------------------------------------------------------------
   // El inventory-service de la rama MS-09 publica esto en /api/inventory/movements.
   // Cada movimiento registrado dispara un webhook al audit-service, completando
-  // el flujo: acciÃ³n â†’ registro en auditorÃ­a.
+  // el flujo: acciÃƒÂ³n Ã¢â€ â€™ registro en auditorÃƒÂ­a.
   router.get('/movements', ...guards, async (req, res, next) => {
     try {
       const upstreamUrl = buildProxyUrl(
@@ -230,3 +230,4 @@ module.exports = {
   createInventoryRouter,
   sendProxyResponse,
 };
+

@@ -137,7 +137,8 @@ function mapSalesReportRow(row) {
   const ganancia = valor_total - costo_total;
   const monto_pagado =
     row.monto_pagado != null ? toNumber(row.monto_pagado) : extractMontoFromComentarios(row.comentarios);
-  const vuelto = monto_pagado != null ? monto_pagado - valor_total : null;
+  const totalVenta = cantidad * precio_unitario;
+  const vuelto = monto_pagado != null ? monto_pagado - totalVenta : null;
   return {
     id_movimiento: row.id_movimiento,
     fecha: toDateOnly(row.fecha_hora_exacta),
@@ -429,6 +430,11 @@ class PgInventoryRepository {
       where.push(
         `(LOWER(mm.tipo_operacion::text) = 'ajuste' AND LOWER(mm.nombre_motivo) LIKE '%ajuste%')`
       );
+    }
+
+    if (filters.numeroFactura) {
+      params.push(`%${filters.numeroFactura}%`);
+      where.push(`COALESCE(m.numero_factura, '') ILIKE $${params.length}`);
     }
 
     const whereClause = where.length > 0 ? `WHERE ${where.join(' AND ')}` : '';
@@ -801,6 +807,12 @@ class InMemoryInventoryRepository {
           return false;
         }
         if (filters.movementType && movement.movement_type !== filters.movementType) {
+          return false;
+        }
+        if (
+          filters.numeroFactura &&
+          !String(movement.numero_factura || '').toLowerCase().includes(String(filters.numeroFactura).toLowerCase())
+        ) {
           return false;
         }
         return true;

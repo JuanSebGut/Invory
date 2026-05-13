@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+﻿import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App.jsx'
@@ -7,7 +7,7 @@ const authState = vi.hoisted(() => ({
   value: {
     isAuthenticated: true,
     isLoading: false,
-    user: { nombre: 'Ana', rol: 'Operador' },
+    user: { nombre: 'Ana', rol: 'Empleado' },
     logout: vi.fn(),
   },
 }))
@@ -30,7 +30,7 @@ describe('App /reportes route', () => {
     authState.value = {
       isAuthenticated: true,
       isLoading: false,
-      user: { nombre: 'Ana', rol: 'Operador' },
+      user: { nombre: 'Ana', rol: 'Empleado' },
       logout: vi.fn(),
     }
   })
@@ -64,3 +64,4 @@ describe('App /reportes route', () => {
     expect(await screen.findByText('Login page')).toBeInTheDocument()
   })
 })
+

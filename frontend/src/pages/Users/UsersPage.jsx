@@ -4,6 +4,12 @@ import { getUsers, createUser, updateUser, disableUser } from '../../api/users'
 import './users.css'
 
 const EMPTY_FORM = { nombre: '', correo: '', contrasena: '', id_rol: 2, estado: 'activo' }
+function canDisableUser(targetUser, authUser) {
+  if (targetUser?.correo === 'admin@invory.com') return false
+  if (authUser?.id_usuario === targetUser?.id_usuario) return false
+  if (targetUser?.estado === false) return false
+  return true
+}
 
 function getInitials(nombre = '') {
   return nombre.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase() || '?'
@@ -133,6 +139,11 @@ export default function UsersPage() {
 
   async function handleDisable() {
     if (!confirmUser) return
+    if (!canDisableUser(confirmUser, authUser)) {
+      setFormError('Este usuario no se puede deshabilitar.')
+      setConfirmUser(null)
+      return
+    }
     setConfirmLoading(true)
     try {
       await disableUser(confirmUser.id_usuario, authUser)
@@ -228,7 +239,7 @@ export default function UsersPage() {
                       <td>
                         <span className={`u-badge ${u.id_rol === 1 ? 'u-badge--admin' : 'u-badge--operator'}`}>
                           <span className="u-badge-dot" />
-                          {u.id_rol === 1 ? 'Administrador' : 'Operador'}
+                          {u.id_rol === 1 ? 'Administrador' : 'Empleado'}
                         </span>
                       </td>
                       <td>
@@ -250,7 +261,14 @@ export default function UsersPage() {
                           <button
                             className="u-btn u-btn--danger u-btn--sm"
                             onClick={() => setConfirmUser(u)}
-                            disabled={!activo}
+                            disabled={!canDisableUser(u, authUser)}
+                            title={
+                              u.correo === 'admin@invory.com'
+                                ? 'El administrador demo no puede deshabilitarse'
+                                : authUser?.id_usuario === u.id_usuario
+                                ? 'No puedes deshabilitarte a ti mismo'
+                                : undefined
+                            }
                           >
                             Deshabilitar
                           </button>
@@ -361,7 +379,7 @@ export default function UsersPage() {
                         onChange={(e) => setForm((p) => ({ ...p, id_rol: Number(e.target.value) }))}
                       >
                         <option value={1}>Administrador</option>
-                        <option value={2}>Operador</option>
+                        <option value={2}>Empleado</option>
                       </select>
                     </div>
 

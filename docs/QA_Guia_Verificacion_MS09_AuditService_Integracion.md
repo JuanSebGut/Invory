@@ -1,4 +1,4 @@
-# Guia QA - Verificacion de MS-09 Auditoria y Trazabilidad e Integracion por API Gateway
+﻿# Guia QA - Verificacion de MS-09 Auditoria y Trazabilidad e Integracion por API Gateway
 
 **Proyecto:** INVENTARIO INVORY  
 **Alcance:** Validacion funcional y tecnica de auditoria integrada con autenticacion, usuarios y movimientos  
@@ -156,7 +156,7 @@ Content-Type: application/json
 
 {
   "nombre_usuario": "operador",
-  "contrasena": "Operador123"
+  "contrasena": "Empleado123"
 }
 ```
 
@@ -177,9 +177,9 @@ Authorization: Bearer <adminToken>
 Content-Type: application/json
 
 {
-  "nombre": "Operador QA",
+  "nombre": "Empleado QA",
   "correo": "operador.qa@invory.test",
-  "contrasena": "Operador123",
+  "contrasena": "Empleado123",
   "id_rol": 2
 }
 ```
@@ -198,7 +198,7 @@ Authorization: Bearer <adminToken>
 Content-Type: application/json
 
 {
-  "nombre": "Operador QA Editado"
+  "nombre": "Empleado QA Editado"
 }
 ```
 
@@ -415,7 +415,7 @@ Resultado esperado:
 
 ## 10) Restriccion por rol
 
-### 10.1 Operador no puede consultar auditoria
+### 10.1 Empleado no puede consultar auditoria
 
 ```http
 GET http://localhost:3000/api/audit/logs
@@ -497,7 +497,7 @@ Validar sobre los logs generados:
 - [ ] Filtro por modulo funciona
 - [ ] Filtro por usuario funciona
 - [ ] Filtro por fecha funciona
-- [ ] Operador no puede consultar auditoria
+- [ ] Empleado no puede consultar auditoria
 - [ ] No existen endpoints de update o delete para logs
 - [ ] `npm run verify:all` termina sin fallos
 
@@ -529,3 +529,4 @@ La integracion se considera aprobada cuando el sistema:
 - permite consulta segura y filtrada del historial
 - restringe el acceso del historial al Administrador
 - mantiene operativo el flujo integrado del backend a traves de `api-gateway`
+

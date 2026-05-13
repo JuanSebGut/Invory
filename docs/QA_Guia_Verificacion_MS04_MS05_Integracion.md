@@ -1,4 +1,4 @@
-# Guia QA - Verificacion de MS-04 + MS-05 e Integracion por API Gateway
+﻿# Guia QA - Verificacion de MS-04 + MS-05 e Integracion por API Gateway
 
 **Proyecto:** INVENTARIO INVORY  
 **Alcance:** Validacion funcional y tecnica de productos, movimientos de inventario y exposicion integrada por API Gateway  
@@ -133,9 +133,9 @@ Authorization: Bearer <token_admin>
 Content-Type: application/json
 
 {
-  "nombre": "Operador Uno",
+  "nombre": "Empleado Uno",
   "correo": "operador1@invory.test",
-  "contrasena": "Operador123",
+  "contrasena": "Empleado123",
   "id_rol": 2
 }
 ```
@@ -143,7 +143,7 @@ Content-Type: application/json
 Resultado esperado:
 
 - HTTP `201`
-- usuario creado sin exponer contraseÃ±a
+- usuario creado sin exponer contraseÃƒÂ±a
 
 ### 6.2 Listar usuarios
 
@@ -487,7 +487,7 @@ Debe poder:
 - registrar ajustes
 - consultar movimientos
 
-### Operador
+### Empleado
 
 Debe poder:
 
@@ -583,7 +583,7 @@ No debe poder:
 - [ ] Ajuste operador retorna `403`
 - [ ] Entrada con proveedor inexistente retorna `404`
 - [ ] Filtros de movimientos funcionan
-- [ ] Operador consulta pero no ejecuta acciones restringidas
+- [ ] Empleado consulta pero no ejecuta acciones restringidas
 - [ ] `npm run verify:all` termina sin fallos
 
 ---
@@ -616,3 +616,4 @@ La integracion se considera aprobada cuando el sistema permite operar correctame
 - movimientos de inventario
 
 y al mismo tiempo respeta las reglas de negocio, restricciones por rol y validaciones de consistencia de datos.
+

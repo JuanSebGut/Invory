@@ -1,4 +1,4 @@
-const test = require('node:test');
+﻿const test = require('node:test');
 const assert = require('node:assert/strict');
 const bcrypt = require('bcryptjs');
 const request = require('supertest');
@@ -43,10 +43,10 @@ function createSeedUsers() {
     {
       id_usuario: 2,
       nombre_usuario: 'operador',
-      nombre: 'Operador',
-      rol: 'Operador',
+      nombre: 'Empleado',
+      rol: 'Empleado',
       estado: 'activo',
-      contrasena_hash: bcrypt.hashSync('Operador123', 10),
+      contrasena_hash: bcrypt.hashSync('Empleado123', 10),
       intentos_fallidos: 0,
       bloqueo_hasta: null,
     },
@@ -69,7 +69,7 @@ function createCategoryTestApp() {
   return createCategoryApp({ repository });
 }
 
-test('Gateway permite a Administrador crear categorias y a Operador solo consultar', async () => {
+test('Gateway permite a Administrador crear categorias y a Empleado solo consultar', async () => {
   const authApp = createAuthApp({ seedUsers: createSeedUsers() });
   const categoryApp = createCategoryTestApp();
 
@@ -91,7 +91,7 @@ test('Gateway permite a Administrador crear categorias y a Operador solo consult
 
   const operatorLogin = await request(authApp).post('/api/auth/login').send({
     nombre_usuario: 'operador',
-    contrasena: 'Operador123',
+    contrasena: 'Empleado123',
   });
 
   const createResponse = await request(gatewayApp)
@@ -126,3 +126,4 @@ test('Gateway permite a Administrador crear categorias y a Operador solo consult
   await stopServer(categoryServer);
   await stopServer(authServer);
 });
+

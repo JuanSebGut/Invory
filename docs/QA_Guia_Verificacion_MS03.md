@@ -1,4 +1,4 @@
-# Guia QA - Verificacion de MS-03 (Servicio de Gestion de Categorias)
+﻿# Guia QA - Verificacion de MS-03 (Servicio de Gestion de Categorias)
 
 **Proyecto:** INVENTARIO INVORY  
 **Alcance:** Validacion funcional y tecnica de CRUD de categorias, reglas de negocio, permisos y exposicion por API Gateway  
@@ -82,8 +82,8 @@ Resultado esperado:
 ### 4.2 API Gateway (`api-gateway/tests/gateway-category.integration.test.js`)
 
 1. Un usuario Administrador puede crear categorias por gateway.
-2. Un usuario Operador puede consultar categorias por gateway.
-3. Un usuario Operador no puede crear categorias y recibe `403`.
+2. Un usuario Empleado puede consultar categorias por gateway.
+3. Un usuario Empleado no puede crear categorias y recibe `403`.
 
 ---
 
@@ -237,7 +237,7 @@ Resultado esperado:
 
 ### 5.10 Validar permisos por rol
 
-#### Operador consulta categorias
+#### Empleado consulta categorias
 
 ```http
 GET http://localhost:3000/api/categories
@@ -247,7 +247,7 @@ Authorization: Bearer <token_operador>
 Resultado esperado:
 - HTTP `200`
 
-#### Operador intenta crear categoria
+#### Empleado intenta crear categoria
 
 ```http
 POST http://localhost:3000/api/categories
@@ -262,7 +262,7 @@ Content-Type: application/json
 Resultado esperado:
 - HTTP `403`
 
-#### Operador intenta actualizar o eliminar
+#### Empleado intenta actualizar o eliminar
 
 Resultado esperado:
 - HTTP `403`
@@ -304,7 +304,7 @@ Resultado esperado:
   - actualizacion
   - borrado logico
   - conflicto `409` por categoria en uso
-- Registro de prueba con usuario Operador mostrando `403` en operaciones de escritura.
+- Registro de prueba con usuario Empleado mostrando `403` en operaciones de escritura.
 
 ---
 
@@ -318,3 +318,4 @@ MS-03 se considera validado cuando:
 - la eliminacion es logica
 - no se permite deshabilitar categorias con productos activos
 - el gateway respeta autenticacion y autorizacion por rol
+

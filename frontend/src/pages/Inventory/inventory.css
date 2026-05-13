@@ -855,3 +855,44 @@ AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAa
 .inv-table tbody td{padding:12px 14px!important;border-bottom:1px solid #e7eff2!important}
 .inv-table tbody tr:hover td{background:#f3fbfd!important}
 .pagination{padding:12px 14px!important;border-top:1px solid var(--line)!important;background:#f7fcfd!important}
+
+/* Venta multiproducto */
+.venta-linea {
+  border: 1px solid var(--inv-border);
+  background: var(--inv-surface-2);
+  border-radius: var(--inv-radius);
+  padding: 12px;
+  margin-top: 10px;
+}
+.venta-linea__header {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--inv-text-muted);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: .3px;
+}
+.venta-linea__grid {
+  grid-template-columns: 2fr 1fr 1fr 1fr auto;
+}
+.venta-linea__remove {
+  align-self: end;
+}
+.venta-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+.venta-resumen {
+  margin-top: 10px;
+}
+@media (max-width: 920px) {
+  .venta-linea__grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 620px) {
+  .venta-linea__grid {
+    grid-template-columns: 1fr;
+  }
+}

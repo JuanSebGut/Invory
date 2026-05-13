@@ -1,6 +1,6 @@
-const { Router } = require('express');
+﻿const { Router } = require('express');
 
-const { ADMINISTRADOR, OPERADOR } = require('../../../shared/constants/roles');
+const { ADMINISTRADOR, EMPLEADO } = require('../../../shared/constants/roles');
 
 function buildProxyUrl(baseUrl, path, query) {
   const searchParams = new URLSearchParams();
@@ -63,7 +63,7 @@ function createCategoryRoutes({ categoryServiceUrl, authMiddleware, fetchImpl = 
   router.get(
     '/',
     authMiddleware,
-    requireRoles([ADMINISTRADOR, OPERADOR]),
+    requireRoles([ADMINISTRADOR, EMPLEADO]),
     (req, res, next) =>
       proxyToCategoryService(
         req,
@@ -124,3 +124,4 @@ function createCategoryRoutes({ categoryServiceUrl, authMiddleware, fetchImpl = 
 }
 
 module.exports = { createCategoryRoutes };
+

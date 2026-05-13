@@ -169,6 +169,7 @@ function validateCreateMovementPayload(body) {
       tipo_movimiento,
       cantidad,
       motivo,
+      numero_factura: normalizeOptionalString(body.numero_factura),
       monto_pagado:
         motivo === 'venta' && typeof body.monto_pagado !== 'undefined'
           ? normalizePrice(body.monto_pagado, 'monto_pagado')
@@ -236,6 +237,7 @@ function parseMovementFilters(query = {}) {
     exactDate,
     dateFrom: exactDate ? undefined : dateFrom,
     dateTo: exactDate ? undefined : dateTo,
+    numeroFactura: normalizeOptionalString(readAlias(query, ['numero_factura', 'numeroFactura'])),
   };
 }
 

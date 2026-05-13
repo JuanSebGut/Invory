@@ -1,4 +1,4 @@
-const test = require('node:test');
+﻿const test = require('node:test');
 const assert = require('node:assert/strict');
 const bcrypt = require('bcryptjs');
 const request = require('supertest');
@@ -63,10 +63,10 @@ function createSeedUsers() {
     {
       id_usuario: 2,
       nombre_usuario: 'operador',
-      nombre: 'Operador Demo',
-      rol: 'Operador',
+      nombre: 'Empleado Demo',
+      rol: 'Empleado',
       estado: 'activo',
-      contrasena_hash: bcrypt.hashSync('Operador123', 10),
+      contrasena_hash: bcrypt.hashSync('Empleado123', 10),
       intentos_fallidos: 0,
       bloqueo_hasta: null,
     },
@@ -216,7 +216,7 @@ test('Gateway integra login, users, categories, products, inventory y audit logs
 
   const operatorLogin = await request(gatewayApp).post('/api/auth/login').send({
     nombre_usuario: 'operador',
-    contrasena: 'Operador123',
+    contrasena: 'Empleado123',
   });
 
   assert.equal(operatorLogin.status, 200);
@@ -355,3 +355,4 @@ test('Gateway integra login, users, categories, products, inventory y audit logs
   await stopServer(authServer);
   await stopServer(auditServer);
 });
+

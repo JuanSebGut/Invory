@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -121,7 +121,7 @@ test('POST /api/export genera Excel con extension xlsx', async () => {
 
 test('POST /api/export bloquea usuarios no administradores', async () => {
   const app = createTestApp({
-    user: { id_usuario: 2, nombre: 'Operador Demo', rol: 'Operador' },
+    user: { id_usuario: 2, nombre: 'Empleado Demo', rol: 'Empleado' },
     dataSources: {
       productos: [{ id_producto: 1, nombre: 'Cafe Premium' }],
     },
@@ -174,3 +174,4 @@ test('POST /api/export responde 413 cuando supera 100000 registros', async () =>
   assert.equal(response.status, 413);
   assert.equal(response.body.error.code, 'EXPORT_LIMIT_EXCEEDED');
 });
+

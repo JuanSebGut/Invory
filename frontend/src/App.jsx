@@ -80,7 +80,7 @@ export default function App() {
         </AdminRoute>
       } />
 
-      {/* MS-04 na Admin y Operador (operador solo lectura) */}
+      {/* MS-04 na Admin y Empleado (operador solo lectura) */}
       <Route path="/productos" element={
         <PrivateRoute>
           <Layout>
@@ -89,7 +89,7 @@ export default function App() {
         </PrivateRoute>
       } />
       
-      {/* MS-05 na Administrador y Operador (con rotacion de rol en la vista) */}
+      {/* MS-05 na Administrador y Empleado (con rotacion de rol en la vista) */}
       <Route path="/inventario" element={
         <PrivateRoute>
           <Layout>
@@ -106,7 +106,7 @@ export default function App() {
         </PrivateRoute>
       } />
 
-      {/* MS-06 na Administrador y Operador (con rotacion de rol en la vista) */}
+      {/* MS-06 na Administrador y Empleado (con rotacion de rol en la vista) */}
       <Route path="/alertas" element={
         <PrivateRoute>
           <Layout>
@@ -152,4 +152,5 @@ export default function App() {
     </Routes>
   )
 }
+
 

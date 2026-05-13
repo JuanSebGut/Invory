@@ -1,4 +1,4 @@
-# Entregable Backend MS-04 + MS-05 â€” Productos, Movimientos de Inventario e Integracion por API Gateway
+﻿# Entregable Backend MS-04 + MS-05 Ã¢â‚¬â€ Productos, Movimientos de Inventario e Integracion por API Gateway
 
 **Proyecto:** INVENTARIO INVORY  
 **Modulos principales:** MS-04 (Product Service), MS-05 (Inventory Movements Service), API Gateway  
@@ -114,7 +114,7 @@ Se implemento `inventory-service` completo con:
 ### Reglas de negocio aplicadas
 
 - el stock nunca puede quedar negativo
-- `Operador` puede registrar entradas y salidas
+- `Empleado` puede registrar entradas y salidas
 - solo `Administrador` puede registrar ajustes
 - los movimientos se insertan de forma atomica
 - la fecha y hora se generan desde el servidor
@@ -175,7 +175,7 @@ ademas de preservar:
 - `Administrador`
   - puede crear, actualizar y eliminar productos
   - puede registrar entradas, salidas y ajustes
-- `Operador`
+- `Empleado`
   - puede consultar productos
   - puede registrar entradas y salidas
   - no puede registrar ajustes
@@ -294,3 +294,4 @@ La rama de trabajo deja funcional el flujo integrado del sistema para:
 - consumo centralizado por `api-gateway`
 
 La implementacion fue verificada con pruebas automaticas y quedo alineada con el esquema real de la base de datos del proyecto.
+

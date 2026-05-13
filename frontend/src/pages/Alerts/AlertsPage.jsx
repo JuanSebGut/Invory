@@ -1,22 +1,22 @@
-/**
- * AlertsPage.jsx — Invory  |  MS-06 Frontend
+﻿/**
+ * AlertsPage.jsx â€” Invory  |  MS-06 Frontend
  * Vista: Alertas de Stock
  *
  * Ruta:       /alertas
- * Roles:      Administrador y Operador
+ * Roles:      Administrador y Empleado
  * Tipos:
- *   - low-stock      → stock ≤ stock mínimo
- *   - high-stock     → stock ≥ stock maximo
- *   - expiring-soon  → vencimiento ≤ 7 días
+ *   - low-stock      â†’ stock â‰¤ stock mÃ­nimo
+ *   - high-stock     â†’ stock â‰¥ stock maximo
+ *   - expiring-soon  â†’ vencimiento â‰¤ 7 dÃ­as
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { getAlerts, getCategoriasActivas } from '../../api/alerts.js'
 import './alerts.css'
 
-/* ══════════════════════════════════════════════════
-   ÍCONOS SVG
-══════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   ÃCONOS SVG
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 const IconArrowDown = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M12 5v14M5 12l7 7 7-7" />
@@ -78,9 +78,9 @@ const IconPackage = () => (
   </svg>
 )
 
-/* ══════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    HOOK: TOASTS
-══════════════════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 function useToast() {
   const [toasts, setToasts] = useState([])
   const timers = useRef({})
@@ -109,9 +109,9 @@ function ToastContainer({ toasts }) {
   )
 }
 
-/* ══════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    HELPERS
-══════════════════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 const ALERT_TYPE_META = {
   'low-stock': {
     label: 'Stock bajo',
@@ -154,7 +154,7 @@ const ALERT_TYPE_META = {
 const ALL_TYPES = ['low-stock', 'high-stock', 'expiring-soon']
 
 function formatTs(iso) {
-  if (!iso) return '—'
+  if (!iso) return 'â€”'
   try {
     return new Date(iso).toLocaleString('es-CO', {
       day: '2-digit', month: '2-digit', year: 'numeric',
@@ -164,7 +164,7 @@ function formatTs(iso) {
 }
 
 function formatDate(iso) {
-  if (!iso) return '—'
+  if (!iso) return 'â€”'
   try {
     return new Date(iso + 'T00:00:00').toLocaleDateString('es-CO', {
       day: '2-digit', month: '2-digit', year: 'numeric',
@@ -173,10 +173,10 @@ function formatDate(iso) {
 }
 
 function DaysBadge({ days }) {
-  if (days === null || days === undefined) return <span style={{ color: 'var(--al-text-soft)' }}>—</span>
-  if (days <= 2) return <span className="days-badge days-badge--urgent">{days === 0 ? 'Hoy' : days === 1 ? 'Mañana' : `${days} días`}</span>
-  if (days <= 7) return <span className="days-badge days-badge--warning">{`${days} días`}</span>
-  return <span className="days-badge days-badge--ok">{`${days} días`}</span>
+  if (days === null || days === undefined) return <span style={{ color: 'var(--al-text-soft)' }}>â€”</span>
+  if (days <= 2) return <span className="days-badge days-badge--urgent">{days === 0 ? 'Hoy' : days === 1 ? 'MaÃ±ana' : `${days} dÃ­as`}</span>
+  if (days <= 7) return <span className="days-badge days-badge--warning">{`${days} dÃ­as`}</span>
+  return <span className="days-badge days-badge--ok">{`${days} dÃ­as`}</span>
 }
 
 function StockBar({ current, min, max, type }) {
@@ -198,7 +198,7 @@ function StockBar({ current, min, max, type }) {
   return (
     <div className="stock-bar-wrap">
       <div className="stock-bar-row">
-        <span className={`stock-bar-num ${meta.numClass}`}>{current ?? '—'}</span>
+        <span className={`stock-bar-num ${meta.numClass}`}>{current ?? 'â€”'}</span>
         <div className="stock-bar-track">
           <div
             className={`stock-bar-fill ${meta.barClass}`}
@@ -211,16 +211,16 @@ function StockBar({ current, min, max, type }) {
   )
 }
 
-/* ══════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    KPI CARD
-══════════════════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 function KpiCard({ type, count, isActive, onClick }) {
   const meta = ALERT_TYPE_META[type]
   const { Icon } = meta
   const subtitles = {
-    'low-stock':      'Stock por debajo del mínimo',
-    'high-stock':     'Stock por encima del máximo',
-    'expiring-soon':  'Vencen en 7 días o menos',
+    'low-stock':      'Stock por debajo del mÃ­nimo',
+    'high-stock':     'Stock por encima del mÃ¡ximo',
+    'expiring-soon':  'Vencen en 7 dÃ­as o menos',
   }
   return (
     <div
@@ -243,9 +243,9 @@ function KpiCard({ type, count, isActive, onClick }) {
   )
 }
 
-/* ══════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    COMPONENTE PRINCIPAL
-══════════════════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 export default function AlertsPage() {
   const [alerts, setAlerts]           = useState([])
   const [loading, setLoading]         = useState(true)
@@ -259,7 +259,7 @@ export default function AlertsPage() {
 
   const { toasts, addToast } = useToast()
 
-  /* -- Cargar categorías una vez -- */
+  /* -- Cargar categorÃ­as una vez -- */
   useEffect(() => {
     getCategoriasActivas()
       .then(data => {
@@ -316,7 +316,7 @@ export default function AlertsPage() {
                 <circle cx="12" cy="12" r="10" strokeWidth="3" stroke="currentColor" strokeOpacity="0.2" />
                 <path d="M12 2a10 10 0 0 1 10 10" strokeWidth="3" stroke="currentColor" strokeLinecap="round" />
               </svg>
-              <span style={{ fontFamily: 'var(--font-main)', fontSize: 13 }}>Analizando inventario…</span>
+              <span style={{ fontFamily: 'var(--font-main)', fontSize: 13 }}>Analizando inventarioâ€¦</span>
             </div>
           </td>
         </tr>
@@ -364,7 +364,7 @@ export default function AlertsPage() {
             </span>
           </td>
           <td>
-            <div style={{ fontWeight: 600 }}>{alert.productName ?? '—'}</div>
+            <div style={{ fontWeight: 600 }}>{alert.productName ?? 'â€”'}</div>
             <div style={{ fontSize: 11, color: 'var(--al-text-soft)', marginTop: 2 }}>
               ID: {alert.productId}
             </div>
@@ -384,7 +384,7 @@ export default function AlertsPage() {
                 <DaysBadge days={alert.daysToExpire} />
               </div>
             ) : (
-              <span style={{ color: 'var(--al-text-soft)', fontSize: 12 }}>—</span>
+              <span style={{ color: 'var(--al-text-soft)', fontSize: 12 }}>â€”</span>
             )}
           </td>
           <td>
@@ -400,7 +400,7 @@ export default function AlertsPage() {
                 </span>
               )}
               {alert.minStock == null && alert.maxStock == null && (
-                <span style={{ color: 'var(--al-text-soft)', fontSize: 12 }}>—</span>
+                <span style={{ color: 'var(--al-text-soft)', fontSize: 12 }}>â€”</span>
               )}
             </div>
           </td>
@@ -419,7 +419,7 @@ export default function AlertsPage() {
                 {alert.categoryId}
               </span>
             ) : (
-              <span style={{ color: 'var(--al-text-soft)', fontSize: 12 }}>—</span>
+              <span style={{ color: 'var(--al-text-soft)', fontSize: 12 }}>â€”</span>
             )}
           </td>
         </tr>
@@ -469,7 +469,7 @@ export default function AlertsPage() {
           <KpiCard
             key={type}
             type={type}
-            count={loading ? '…' : countByType[type]}
+            count={loading ? 'â€¦' : countByType[type]}
             isActive={selectedTypes.includes(type)}
             onClick={() => toggleType(type)}
           />
@@ -481,11 +481,11 @@ export default function AlertsPage() {
           </div>
           <div className="al-kpi-info">
             <div className="al-kpi-count" style={{ color: '#059669' }}>
-              {loading ? '…' : totalAlertas}
+              {loading ? 'â€¦' : totalAlertas}
             </div>
             <div className="al-kpi-label">Alertas activas</div>
             <div className="al-kpi-hint">
-              {loading ? '' : totalAlertas === 0 ? 'Sin alertas, todo normal' : 'Requieren atención'}
+              {loading ? '' : totalAlertas === 0 ? 'Sin alertas, todo normal' : 'Requieren atenciÃ³n'}
             </div>
           </div>
         </div>
@@ -527,15 +527,15 @@ export default function AlertsPage() {
           </div>
         </div>
 
-        {/* Filtro por categoría */}
+        {/* Filtro por categorÃ­a */}
         <div className="al-filter-field">
-          <span className="al-filter-label">Categoría</span>
+          <span className="al-filter-label">CategorÃ­a</span>
           <select
             className="al-filter-select"
             value={selectedCatId}
             onChange={e => setSelectedCatId(e.target.value)}
           >
-            <option value="">Todas las categorías</option>
+            <option value="">Todas las categorÃ­as</option>
             {categorias.map(c => (
               <option key={c.id || c.id_categoria} value={String(c.id || c.id_categoria)}>
                 {c.nombre_categoria}
@@ -544,7 +544,7 @@ export default function AlertsPage() {
           </select>
         </div>
 
-        {/* Botón limpiar */}
+        {/* BotÃ³n limpiar */}
         {hayFiltros && (
           <div className="al-filter-actions">
             <button
@@ -564,7 +564,7 @@ export default function AlertsPage() {
         <div className="al-table-card__toolbar">
           <span className="al-table-card__info">
             {loading
-              ? 'Cargando alertas…'
+              ? 'Cargando alertasâ€¦'
               : `${totalAlertas} ${totalAlertas === 1 ? 'alerta activa' : 'alertas activas'}${hayFiltros ? ' (filtradas)' : ''}`
             }
           </span>
@@ -585,7 +585,7 @@ export default function AlertsPage() {
                 <th>Stock actual</th>
                 <th>Vencimiento</th>
                 <th>Umbrales</th>
-                <th>Categoría</th>
+                <th>CategorÃ­a</th>
               </tr>
             </thead>
             <tbody>

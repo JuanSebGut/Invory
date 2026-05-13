@@ -1,9 +1,9 @@
-/**
+﻿/**
  * ReportsPage.jsx Aaa Invory  |  MS-07 + MS-12 Frontend
  * Vista: Reportes de Inventario + ExportaciAAn
  *
  * Ruta:    /reportes
- * Roles:   Administrador y Operador (operador solo lectura, sin exportar)
+ * Roles:   Administrador y Empleado (operador solo lectura, sin exportar)
  * Tipos:   movements | sales | stock
  *
  * MS-07 (Juan Sebastian): generaciAAn de reportes con filtros y tabla.
@@ -661,3 +661,4 @@ export default function ReportsPage() {
     </div>
   )
 }
+

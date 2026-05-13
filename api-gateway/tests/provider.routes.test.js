@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -58,7 +58,7 @@ test('POST /api/providers blocks non-admin users before calling upstream', async
         return { success: true };
       },
     };
-  }, { id_usuario: 2, nombre: 'Operador Demo', rol: 'Operador' });
+  }, { id_usuario: 2, nombre: 'Empleado Demo', rol: 'Empleado' });
 
   const response = await request(app).post('/api/providers').send({
     nombre_razon_social: 'Proveedor Demo',
@@ -69,3 +69,4 @@ test('POST /api/providers blocks non-admin users before calling upstream', async
   assert.equal(response.body.error.code, 'AUTH_FORBIDDEN');
   assert.equal(called, false);
 });
+

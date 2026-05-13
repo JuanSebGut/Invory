@@ -74,15 +74,16 @@ async function apiFetch(path, options = {}) {
 }
 
 /** Registrar movimiento (entrada, salida o ajuste) */
-export function registrarMovimiento(payload) {
-  return apiFetch('/inventory/movements', {
+export function registrarMovimiento(payload, { force = false } = {}) {
+  const suffix = force ? '?force=true' : ''
+  return apiFetch(`/inventory/movements${suffix}`, {
     method: 'POST',
     body: JSON.stringify(payload),
   })
 }
 
 /** Listar movimientos con filtros opcionales */
-export function getMovimientos({ page = 1, size = 10, producto, tipo, fecha, fecha_desde, fecha_hasta } = {}) {
+export function getMovimientos({ page = 1, size = 10, producto, tipo, fecha, fecha_desde, fecha_hasta, numero_factura } = {}) {
   const params = new URLSearchParams()
   params.append('page', page)
   params.append('size', size)
@@ -91,10 +92,16 @@ export function getMovimientos({ page = 1, size = 10, producto, tipo, fecha, fec
   if (fecha) params.append('fecha', fecha)
   if (fecha_desde) params.append('fecha_desde', fecha_desde)
   if (fecha_hasta) params.append('fecha_hasta', fecha_hasta)
+  if (numero_factura) params.append('numero_factura', numero_factura)
   return apiFetch(`/inventory/movements?${params.toString()}`)
 }
 
 /** Cargar lista de productos para selectores del formulario */
-export function getProductos(page = 1, size = 100) {
-  return apiFetch(`/products?page=${page}&size=${size}`)
+export function getProductos(pageOrOptions = 1, size = 100) {
+  const opts = typeof pageOrOptions === 'object'
+    ? pageOrOptions
+    : { page: pageOrOptions, size }
+  const pageValue = opts.page ?? 1
+  const sizeValue = opts.size ?? 100
+  return apiFetch(`/products?page=${pageValue}&size=${sizeValue}`)
 }

@@ -1,4 +1,4 @@
-const test = require('node:test');
+﻿const test = require('node:test');
 const assert = require('node:assert/strict');
 
 const { createApp } = require('../src/app');
@@ -99,8 +99,8 @@ test('GET /api/audit/logs bloquea usuarios que no son administradores', async ()
     repository: new InMemoryAuditRepository(),
     authMiddleware: createTestAuthMiddleware({
       id_usuario: 2,
-      nombre: 'Operador Demo',
-      rol: 'Operador',
+      nombre: 'Empleado Demo',
+      rol: 'Empleado',
     }),
   });
 
@@ -115,3 +115,4 @@ test('GET /api/audit/logs bloquea usuarios que no son administradores', async ()
 
   await stopServer(server);
 });
+

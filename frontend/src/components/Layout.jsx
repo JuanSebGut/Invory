@@ -1,4 +1,4 @@
-import { NavLink, Link, useNavigate } from 'react-router-dom'
+﻿import { NavLink, Link, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import './layout.css'
@@ -26,7 +26,7 @@ const NAV_ADMIN = [
   { to: '/reportes', icon: <Icon.Chart />, label: 'Reportes' },
 ]
 
-const NAV_OPERADOR = [
+const NAV_EMPLEADO = [
   { to: '/productos', icon: <Icon.Box />, label: 'Productos' },
   { to: '/inventario', icon: <Icon.Receipt />, label: 'Inventario' },
   { to: '/historial', icon: <Icon.History />, label: 'Historial' },
@@ -60,7 +60,7 @@ export default function Layout({ children }) {
       .catch(() => {})
   }, [apiBase, token])
 
-  const navItems = user?.rol === 'Administrador' ? NAV_ADMIN : NAV_OPERADOR
+  const navItems = user?.rol === 'Administrador' ? NAV_ADMIN : NAV_EMPLEADO
 
   return (
     <div className="layout-shell">
@@ -93,3 +93,4 @@ export default function Layout({ children }) {
     </div>
   )
 }
+

@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -70,7 +70,7 @@ test('POST /api/export blocks non-admin users before calling upstream', async ()
         return Buffer.from('{}');
       },
     };
-  }, { id_usuario: 2, nombre: 'Operador Demo', rol: 'Operador' });
+  }, { id_usuario: 2, nombre: 'Empleado Demo', rol: 'Empleado' });
 
   const response = await request(app)
     .post('/api/export')
@@ -100,3 +100,4 @@ test('POST /api/export preserves upstream JSON errors', async () => {
   assert.equal(response.status, 404);
   assert.equal(response.body.error.code, 'EXPORT_DATA_NOT_FOUND');
 });
+

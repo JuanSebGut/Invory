@@ -24,6 +24,26 @@
   padding: 12px;
 }
 
+.history-filters {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(120px, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.history-filters input,
+.history-filters select,
+.history-filters button {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.mov-pos { color: #0f9d58; font-weight: 700; }
+.mov-neg { color: #d93025; font-weight: 700; }
+.mov-warn { color: #c78b00; font-weight: 700; }
+.mov-orange { color: #ef6c00; font-weight: 700; }
+
 .history-page__table {
   width: 100%;
   border-collapse: separate;
@@ -55,4 +75,5 @@
 
 @media (max-width: 760px) {
   .history-page { padding: 14px; }
+  .history-filters { grid-template-columns: 1fr; }
 }

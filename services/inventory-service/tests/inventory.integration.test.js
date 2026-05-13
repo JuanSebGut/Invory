@@ -1,4 +1,4 @@
-const test = require('node:test');
+﻿const test = require('node:test');
 const assert = require('node:assert/strict');
 const request = require('supertest');
 
@@ -13,7 +13,7 @@ function createTestAuthMiddleware(user) {
 }
 
 function buildTestContext(
-  user = { id_usuario: 10, nombre: 'Operador Demo', rol: 'Operador' }
+  user = { id_usuario: 10, nombre: 'Empleado Demo', rol: 'Empleado' }
 ) {
   const repository = new InMemoryInventoryRepository({
     products: [
@@ -42,7 +42,7 @@ function buildTestContext(
 }
 
 function buildReportContext(
-  user = { id_usuario: 10, nombre: 'Operador Demo', rol: 'Operador' }
+  user = { id_usuario: 10, nombre: 'Empleado Demo', rol: 'Empleado' }
 ) {
   const repository = new InMemoryInventoryRepository({
     products: [
@@ -83,7 +83,7 @@ function buildReportContext(
         cantidad: 10,
         stock_anterior: 2,
         stock_posterior: 12,
-        nombre_motivo: 'Compra / ReposiciÃ³n',
+        nombre_motivo: 'Compra / ReposiciÃƒÂ³n',
         tipo_operacion: 'ENTRADA',
         id_usuario: 1,
         nombre_usuario: 'Admin Demo',
@@ -100,7 +100,7 @@ function buildReportContext(
         nombre_motivo: 'VENTA MOSTRADOR',
         tipo_operacion: 'SALIDA',
         id_usuario: 2,
-        nombre_usuario: 'Operador Demo',
+        nombre_usuario: 'Empleado Demo',
         fecha_hora_exacta: '2026-04-10T10:00:00.000Z',
       },
       {
@@ -114,7 +114,7 @@ function buildReportContext(
         nombre_motivo: 'Venta web',
         tipo_operacion: 'SALIDA',
         id_usuario: 2,
-        nombre_usuario: 'Operador Demo',
+        nombre_usuario: 'Empleado Demo',
         fecha_hora_exacta: '2026-04-20T09:30:00.000Z',
       },
       {
@@ -128,7 +128,7 @@ function buildReportContext(
         nombre_motivo: 'Merma',
         tipo_operacion: 'SALIDA',
         id_usuario: 2,
-        nombre_usuario: 'Operador Demo',
+        nombre_usuario: 'Empleado Demo',
         fecha_hora_exacta: '2026-04-12T09:30:00.000Z',
       },
     ],
@@ -186,8 +186,8 @@ test('POST /api/inventory/movements rechaza salidas que dejan stock negativo', a
 test('POST /api/inventory/movements bloquea ajustes para usuarios no administradores', async () => {
   const { app } = buildTestContext({
     id_usuario: 11,
-    nombre: 'Operador Prueba',
-    rol: 'Operador',
+    nombre: 'Empleado Prueba',
+    rol: 'Empleado',
   });
 
   const response = await request(app).post('/api/inventory/movements').send({
@@ -220,8 +220,8 @@ test('POST /api/inventory/movements responde 404 si el proveedor no existe', asy
     notifier: { notifyMovementRegistered: async () => {} },
     authMiddleware: createTestAuthMiddleware({
       id_usuario: 10,
-      nombre: 'Operador Demo',
-      rol: 'Operador',
+      nombre: 'Empleado Demo',
+      rol: 'Empleado',
     }),
   });
 
@@ -295,11 +295,11 @@ test('GET /api/inventory/movements filtra por fecha, producto y tipo', async () 
 });
 
 // ===========================================================================
-// ValidaciÃ³n de stock_minimo en salidas (fix reportado post-PR)
+// ValidaciÃƒÂ³n de stock_minimo en salidas (fix reportado post-PR)
 // ===========================================================================
 
 function buildTestContextWithMinStock(
-  user = { id_usuario: 10, nombre: 'Operador Demo', rol: 'Operador' }
+  user = { id_usuario: 10, nombre: 'Empleado Demo', rol: 'Empleado' }
 ) {
   const repository = new InMemoryInventoryRepository({
     products: [
@@ -323,7 +323,7 @@ function buildTestContextWithMinStock(
 test('POST /api/inventory/movements rechaza salida que deja stock por debajo del minimo', async () => {
   const { app, repository } = buildTestContextWithMinStock();
 
-  // stock_actual=12, stock_minimo=5. Salida de 8 dejarÃ­a stock en 4 (< 5).
+  // stock_actual=12, stock_minimo=5. Salida de 8 dejarÃƒÂ­a stock en 4 (< 5).
   const response = await request(app).post('/api/inventory/movements').send({
     id_producto: 1,
     tipo_movimiento: 'salida',
@@ -334,10 +334,10 @@ test('POST /api/inventory/movements rechaza salida que deja stock por debajo del
   assert.equal(response.status, 422);
   assert.equal(response.body.success, false);
   assert.equal(response.body.error.code, 'BELOW_MINIMUM_STOCK');
-  assert.match(response.body.error.message, /m[iÃ­]nimo permitido/);
+  assert.match(response.body.error.message, /m[iÃƒÂ­]nimo permitido/);
   assert.equal(repository.movements.length, 0);
 
-  // El stock NO se modificÃ³.
+  // El stock NO se modificÃƒÂ³.
   const product = await repository.getProductById(1);
   assert.equal(product.stock_actual, 12);
 });
@@ -380,12 +380,12 @@ test('POST /api/inventory/movements?force=true permite a Administrador cruzar el
   assert.equal(repository.movements.length, 1);
 });
 
-test('POST /api/inventory/movements?force=true rechaza override de Operador', async () => {
-  // Operador NO puede usar force=true para saltarse el mÃ­nimo.
+test('POST /api/inventory/movements?force=true rechaza override de Empleado', async () => {
+  // Empleado NO puede usar force=true para saltarse el mÃƒÂ­nimo.
   const { app } = buildTestContextWithMinStock({
     id_usuario: 10,
-    nombre: 'Operador',
-    rol: 'Operador',
+    nombre: 'Empleado',
+    rol: 'Empleado',
   });
 
   const response = await request(app)
@@ -402,8 +402,8 @@ test('POST /api/inventory/movements?force=true rechaza override de Operador', as
 });
 
 test('POST /api/inventory/movements no aplica validacion de minimo en ajustes', async () => {
-  // Los ajustes son correcciones de inventario real: un faltante legÃ­timo
-  // puede dejar el stock bajo mÃ­nimo y eso es vÃ¡lido.
+  // Los ajustes son correcciones de inventario real: un faltante legÃƒÂ­timo
+  // puede dejar el stock bajo mÃƒÂ­nimo y eso es vÃƒÂ¡lido.
   const { app, repository } = buildTestContextWithMinStock({
     id_usuario: 1,
     nombre: 'Admin',
@@ -419,7 +419,7 @@ test('POST /api/inventory/movements no aplica validacion de minimo en ajustes', 
   });
 
   assert.equal(response.status, 201);
-  assert.equal(response.body.data.nuevo_stock, 3); // bajo mÃ­nimo (5), pero permitido
+  assert.equal(response.body.data.nuevo_stock, 3); // bajo mÃƒÂ­nimo (5), pero permitido
   assert.equal(repository.movements.length, 1);
 });
 
@@ -613,7 +613,7 @@ test('GET /api/inventory/movements y reports mantienen la fecha local de Colombi
         cantidad: 10,
         stock_anterior: 2,
         stock_posterior: 12,
-        nombre_motivo: 'Compra / ReposiciÃ³n',
+        nombre_motivo: 'Compra / ReposiciÃƒÂ³n',
         tipo_operacion: 'ENTRADA',
         id_usuario: 1,
         nombre_usuario: 'Admin Demo',
@@ -626,8 +626,8 @@ test('GET /api/inventory/movements y reports mantienen la fecha local de Colombi
     notifier: { notifyMovementRegistered: async () => {} },
     authMiddleware: createTestAuthMiddleware({
       id_usuario: 10,
-      nombre: 'Operador Demo',
-      rol: 'Operador',
+      nombre: 'Empleado Demo',
+      rol: 'Empleado',
     }),
   });
 
@@ -641,3 +641,4 @@ test('GET /api/inventory/movements y reports mantienen la fecha local de Colombi
   assert.equal(movementsResponse.body.data.items[0].fecha, '2026-05-04');
   assert.equal(reportResponse.body.data.items[0].fecha, '2026-05-04');
 });
+

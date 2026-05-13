@@ -1,4 +1,4 @@
---
+﻿--
 -- PostgreSQL database dump
 --
 
@@ -807,10 +807,10 @@ COPY public.exportaciones_reportes (id_exportacion, tipo_reporte, formato, fecha
 --
 
 COPY public.motivos_movimiento (id_motivo, nombre_motivo, tipo_operacion) FROM stdin;
-12	Compra / ReposiciÃ³n	ENTRADA
-13	DevoluciÃ³n proveedor	ENTRADA
+12	Compra / ReposiciÃƒÂ³n	ENTRADA
+13	DevoluciÃƒÂ³n proveedor	ENTRADA
 14	Venta	SALIDA
-15	DaÃ±ado	SALIDA
+15	DaÃƒÂ±ado	SALIDA
 16	Vencido	SALIDA
 17	Merma	SALIDA
 18	Ajuste sobrante	AJUSTE
@@ -818,10 +818,10 @@ COPY public.motivos_movimiento (id_motivo, nombre_motivo, tipo_operacion) FROM s
 20	Robo	AJUSTE
 21	Rotura	AJUSTE
 22	Caducidad	AJUSTE
-23	Compra / ReposiciÃ³n	ENTRADA
-24	DevoluciÃ³n proveedor	ENTRADA
+23	Compra / ReposiciÃƒÂ³n	ENTRADA
+24	DevoluciÃƒÂ³n proveedor	ENTRADA
 25	Venta	SALIDA
-26	DaÃ±ado	SALIDA
+26	DaÃƒÂ±ado	SALIDA
 27	Vencido	SALIDA
 28	Merma	SALIDA
 29	Ajuste sobrante	AJUSTE
@@ -879,8 +879,8 @@ COPY public.proveedores (id_proveedor, razon_social, nit_identificacion, telefon
 --
 
 COPY public.roles (id_rol, nombre_rol, descripcion) FROM stdin;
-1	Administrador	Acceso total al sistema: usuarios, ajustes, auditorÃ­a y configuraciÃ³n
-2	Operador	Acceso operativo: consulta de inventario, entradas y salidas
+1	Administrador	Acceso total al sistema: usuarios, ajustes, auditorÃƒÂ­a y configuraciÃƒÂ³n
+2	Empleado	Acceso operativo: consulta de inventario, entradas y salidas
 \.
 
 
@@ -1507,4 +1507,10 @@ INSERT INTO public.proveedores
 (razon_social, nit_identificacion, telefono, direccion, correo, estado)
 VALUES
 ('Proveedor Demo', '900123456', '3000000000', 'Bogota', 'proveedor@demo.com', true);
-\unrestrict hRvVySTNPFbTBlaWpWtPQHNGtyl4rtTI63jPESJNlbP5FXa7BtzyTvXihEzOqLN
+UPDATE public.roles SET nombre_rol = 'Empleado' WHERE nombre_rol = 'Operador';
+\\unrestrict hRvVySTNPFbTBlaWpWtPQHNGtyl4rtTI63jPESJNlbP5FXa7BtzyTvXihEzOqLN
+
+
+
+
+

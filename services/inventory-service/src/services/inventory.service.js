@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 /**
  * Servicio de dominio del inventory-service unificado.
@@ -7,18 +7,18 @@
  *
  *   - MS-09 (movimientos): clase InventoryService con registerMovement /
  *     listMovements. Aplica reglas de permisos por rol (ajustes solo para
- *     Administrador), valida stock, persiste en una transacciÃ³n y dispara
- *     un webhook al audit-service para registrar la acciÃ³n.
+ *     Administrador), valida stock, persiste en una transacciÃƒÂ³n y dispara
+ *     un webhook al audit-service para registrar la acciÃƒÂ³n.
  *
  *   - MS-06 (alertas): factory createInventoryService que expone
- *     getActiveAlerts. Lee filas crudas vÃ­a repository.getAlertSourceRows
+ *     getActiveAlerts. Lee filas crudas vÃƒÂ­a repository.getAlertSourceRows
  *     y deriva alertas low-stock / high-stock / expiring-soon.
  *
  * Las dos APIs no se solapan ni comparten estado interno; se exponen juntas
  * solo porque MS-05 las consume desde el mismo proceso.
  */
 
-const { ADMINISTRADOR, OPERADOR } = require('../../../../shared/constants/roles');
+const { ADMINISTRADOR, EMPLEADO } = require('../../../../shared/constants/roles');
 const {
   ALERT_TYPES,
   EXPIRING_SOON_DAYS,
@@ -137,7 +137,7 @@ const REPORT_COLUMNS = Object.freeze({
   [REPORT_TYPES.MOVEMENTS]: [
     { key: 'fecha', label: 'Fecha' },
     { key: 'producto', label: 'Producto' },
-    { key: 'categoria', label: 'CategorÃ­a' },
+    { key: 'categoria', label: 'CategorÃƒÂ­a' },
     { key: 'tipo', label: 'Tipo' },
     { key: 'motivo', label: 'Motivo' },
     { key: 'cantidad', label: 'Cantidad' },
@@ -148,7 +148,7 @@ const REPORT_COLUMNS = Object.freeze({
   [REPORT_TYPES.SALES]: [
     { key: 'fecha', label: 'Fecha' },
     { key: 'producto', label: 'Producto' },
-    { key: 'categoria', label: 'CategorÃ­a' },
+    { key: 'categoria', label: 'CategorÃƒÂ­a' },
     { key: 'cantidad', label: 'Cantidad' },
     { key: 'precio_unitario', label: 'Precio venta' },
     { key: 'costo_unitario', label: 'Costo unitario' },
@@ -160,7 +160,7 @@ const REPORT_COLUMNS = Object.freeze({
   ],
   [REPORT_TYPES.STOCK]: [
     { key: 'producto', label: 'Producto' },
-    { key: 'categoria', label: 'CategorÃ­a' },
+    { key: 'categoria', label: 'CategorÃƒÂ­a' },
     { key: 'cantidad', label: 'Stock actual' },
     { key: 'precio_unitario', label: 'Precio unitario' },
     { key: 'valor_total', label: 'Valor inventario' },
@@ -181,7 +181,7 @@ function buildReportPayload(reportType, filters, items) {
 }
 
 // ===========================================================================
-// MS-09 â€” Servicio de movimientos
+// MS-09 Ã¢â‚¬â€ Servicio de movimientos
 // ===========================================================================
 
 function isActiveProduct(product) {
@@ -207,7 +207,7 @@ function isActiveProvider(provider) {
 }
 
 /**
- * Da forma a un movimiento persistido para la respuesta HTTP. AÃ­sla a los
+ * Da forma a un movimiento persistido para la respuesta HTTP. AÃƒÂ­sla a los
  * controllers de las particularidades del repositorio (snake_case de DB,
  * fechas ISO completas vs. fecha+hora separadas, etc.).
  */
@@ -255,7 +255,7 @@ class InventoryService {
    * Aplica el contrato de roles de R02 + R14:
    *   - Cualquier movimiento exige actor autenticado.
    *   - Ajustes son exclusivos de Administrador.
-   *   - Entradas y salidas las puede registrar Administrador u Operador.
+   *   - Entradas y salidas las puede registrar Administrador u Empleado.
    */
   assertPermissions(tipoMovimiento, actor) {
     if (!actor?.id_usuario) {
@@ -272,7 +272,7 @@ class InventoryService {
       );
     }
 
-    if (![ADMINISTRADOR, OPERADOR].includes(role)) {
+    if (![ADMINISTRADOR, EMPLEADO].includes(role)) {
       throw createHttpError(
         403,
         'INVENTORY_MOVEMENT_FORBIDDEN',
@@ -286,20 +286,20 @@ class InventoryService {
    * Reglas:
    *   - Entrada: suma cantidad.
    *   - Salida: resta cantidad. Lanza 422 si:
-   *       * dejarÃ­a stock negativo (INSUFFICIENT_STOCK), o
-   *       * dejarÃ­a stock por debajo de stock_minimo del producto
+   *       * dejarÃƒÂ­a stock negativo (INSUFFICIENT_STOCK), o
+   *       * dejarÃƒÂ­a stock por debajo de stock_minimo del producto
    *         (BELOW_MINIMUM_STOCK), salvo que `force=true` (override Admin).
-   *   - Ajuste: suma o resta segÃºn tipo. Lanza 422 si dejarÃ­a negativo.
+   *   - Ajuste: suma o resta segÃƒÂºn tipo. Lanza 422 si dejarÃƒÂ­a negativo.
    *     Los ajustes NO validan stock_minimo: son correcciones de
-   *     inventario real (faltantes legÃ­timos pueden quedar bajo mÃ­nimo).
+   *     inventario real (faltantes legÃƒÂ­timos pueden quedar bajo mÃƒÂ­nimo).
    *
    * @param {object} payload    Payload del movimiento ya validado.
    * @param {number} stockAnterior
    * @param {object} [options]
-   * @param {number} [options.stockMinimo]   Stock mÃ­nimo del producto (puede
+   * @param {number} [options.stockMinimo]   Stock mÃƒÂ­nimo del producto (puede
    *   ser null/undefined si el producto no lo define).
-   * @param {boolean} [options.force=false]  Si true, salta la validaciÃ³n de
-   *   stock_minimo. Solo usado por Administrador vÃ­a query ?force=true.
+   * @param {boolean} [options.force=false]  Si true, salta la validaciÃƒÂ³n de
+   *   stock_minimo. Solo usado por Administrador vÃƒÂ­a query ?force=true.
    * @param {string}  [options.actorRole]    Rol del actor (para permitir
    *   force solo si es Administrador).
    */
@@ -321,7 +321,7 @@ class InventoryService {
       const minimo = options.stockMinimo;
       const canForce = options.force === true && options.actorRole === ADMINISTRADOR;
 
-      // Solo bloqueamos si se conoce el mÃ­nimo y la salida lo cruza.
+      // Solo bloqueamos si se conoce el mÃƒÂ­nimo y la salida lo cruza.
       if (
         typeof minimo === 'number' &&
         Number.isFinite(minimo) &&
@@ -331,8 +331,8 @@ class InventoryService {
         throw createHttpError(
           422,
           'BELOW_MINIMUM_STOCK',
-          `La salida dejarÃ­a el stock (${stockPosterior}) por debajo del mÃ­nimo permitido (${minimo}). ` +
-            'Un Administrador puede forzar la operaciÃ³n con ?force=true si es estrictamente necesario.'
+          `La salida dejarÃƒÂ­a el stock (${stockPosterior}) por debajo del mÃƒÂ­nimo permitido (${minimo}). ` +
+            'Un Administrador puede forzar la operaciÃƒÂ³n con ?force=true si es estrictamente necesario.'
         );
       }
 
@@ -356,18 +356,22 @@ class InventoryService {
   }
 
   /**
-   * Registra un movimiento dentro de una transacciÃ³n. DespuÃ©s de commit,
+   * Registra un movimiento dentro de una transacciÃƒÂ³n. DespuÃƒÂ©s de commit,
    * dispara el webhook a MS-09 (audit-service) en fire-and-forget para no
-   * acoplar la latencia del cliente al pipeline de auditorÃ­a.
+   * acoplar la latencia del cliente al pipeline de auditorÃƒÂ­a.
    *
    * @param {object} payload    Payload del movimiento (validado).
    * @param {object} context
    * @param {object} context.actor       Usuario autenticado.
    * @param {boolean} [context.force]    Si true y el actor es Administrador,
-   *   permite cruzar el stock mÃ­nimo en una salida (override controlado).
+   *   permite cruzar el stock mÃƒÂ­nimo en una salida (override controlado).
    */
   async registerMovement(payload, { actor, force = false }) {
     this.assertPermissions(payload.tipo_movimiento, actor);
+    const isSale = payload.tipo_movimiento === MOVEMENT_TYPES.EXIT && payload.motivo === 'venta';
+    const montoPagadoVenta = isSale && typeof payload.monto_pagado === 'number'
+      ? payload.monto_pagado
+      : null;
 
     const persisted = await this.repository.runInTransaction(async (trx) => {
       const product = await this.repository.getProductById(payload.id_producto, {
@@ -417,7 +421,7 @@ class InventoryService {
           stock_posterior: stockPosterior,
           numero_factura: payload.numero_factura,
           comentarios: payload.comentario || payload.motivo_ajuste || payload.motivo,
-          monto_pagado: payload.monto_pagado,
+          monto_pagado: montoPagadoVenta,
           movement_type: payload.tipo_movimiento,
         },
         { trx }
@@ -448,7 +452,7 @@ class InventoryService {
         movement_type: payload.tipo_movimiento,
         tipo_ajuste: payload.tipo_ajuste || null,
         fecha_vencimiento: payload.fecha_vencimiento || null,
-        monto_pagado: typeof payload.monto_pagado === 'number' ? payload.monto_pagado : movement.monto_pagado,
+        monto_pagado: montoPagadoVenta ?? movement.monto_pagado,
       };
     });
 
@@ -502,7 +506,7 @@ class InventoryService {
 }
 
 // ===========================================================================
-// MS-06 â€” Servicio de alertas de stock
+// MS-06 Ã¢â‚¬â€ Servicio de alertas de stock
 // ===========================================================================
 
 function buildLowStockAlert(source, now) {
@@ -534,7 +538,7 @@ function buildExpiringSoonAlert(source, now) {
 }
 
 /**
- * Pipeline de derivaciÃ³n: por cada fila origen genera potencialmente las tres
+ * Pipeline de derivaciÃƒÂ³n: por cada fila origen genera potencialmente las tres
  * variantes de alerta y se queda solo con las que pasan los predicados.
  */
 function deriveAlerts(records = [], { now = new Date().toISOString() } = {}) {
@@ -562,7 +566,7 @@ function applyAlertFilters(alerts, filters) {
 
 /**
  * Factory functional para el servicio de alertas. Mantiene el contrato
- * histÃ³rico de MS-06: { getActiveAlerts(filters) -> { data, meta } }.
+ * histÃƒÂ³rico de MS-06: { getActiveAlerts(filters) -> { data, meta } }.
  */
 function createInventoryService({ repository, nowProvider = () => new Date().toISOString() } = {}) {
   if (!repository || typeof repository.getAlertSourceRows !== 'function') {
@@ -608,3 +612,4 @@ module.exports = {
   normalizeSalesReason,
   normalizeAlertFilters,
 };
+
