@@ -112,6 +112,8 @@ function filterReportByDate(record, filters = {}) {
 
 function mapMovementReportRow(row) {
   const monto = row.monto_pagado != null ? toNumber(row.monto_pagado) : extractMontoFromComentarios(row.comentarios);
+  const cantidad = toNumber(row.cantidad);
+  const precioUnitario = toNumber(row.precio_venta);
   return {
     id_movimiento: row.id_movimiento,
     fecha: toDateOnly(row.fecha_hora_exacta),
@@ -119,11 +121,11 @@ function mapMovementReportRow(row) {
     categoria: row.nombre_categoria || null,
     tipo: deriveMovementTypeFromReason(row),
     motivo: row.nombre_motivo || null,
-    cantidad: toNumber(row.cantidad),
+    cantidad,
     stock_anterior: toNumber(row.stock_anterior),
     stock_posterior: toNumber(row.stock_posterior),
     usuario: row.nombre_usuario || null,
-    valor_total: 0,
+    valor_total: cantidad * precioUnitario,
     monto_pagado: monto,
   };
 }
@@ -597,6 +599,7 @@ class PgInventoryRepository {
         m.comentarios,
         ${hasMontoColumn ? 'm.monto_pagado' : 'NULL::numeric AS monto_pagado'},
         p.id_categoria,
+        p.precio_venta,
         p.nombre AS nombre_producto,
         c.nombre_categoria,
         u.nombre AS nombre_usuario,

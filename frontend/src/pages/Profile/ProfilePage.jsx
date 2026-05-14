@@ -4,7 +4,7 @@ import { getMyProfile, updateMyProfile } from '../../api/users'
 import './profile.css'
 
 export default function ProfilePage() {
-  const { user } = useAuth()
+  const { user, updateUser } = useAuth()
   const [nombre, setNombre] = useState(user?.nombre || '')
   const [pass, setPass] = useState('')
   const [confirm, setConfirm] = useState('')
@@ -17,6 +17,7 @@ export default function ProfilePage() {
   useEffect(() => {
     setCorreo(user?.correo || '')
     setRol(user?.rol || '')
+    setNombre(user?.nombre || '')
   }, [user])
 
   useEffect(() => {
@@ -34,7 +35,14 @@ export default function ProfilePage() {
   async function onSaveName(e) {
     e.preventDefault()
     setLoadingName(true)
-    try { await updateMyProfile({ nombre }) } finally { setLoadingName(false) }
+    try {
+      const updated = await updateMyProfile({ nombre })
+      const nuevoNombre = updated?.nombre || nombre
+      const nuevoCorreo = updated?.correo || updated?.email || correo
+      setNombre(nuevoNombre)
+      setCorreo(nuevoCorreo)
+      updateUser({ nombre: nuevoNombre, correo: nuevoCorreo })
+    } finally { setLoadingName(false) }
   }
 
   async function onSavePass(e) {
@@ -58,7 +66,6 @@ export default function ProfilePage() {
             <label>Nombre</label>
             <input value={nombre} onChange={(e) => setNombre(e.target.value)} />
             <div className="profile-field-readonly"><label>Correo</label><span>{correo || 'No disponible'}</span></div>
-            <div className="profile-field-readonly"><label>Rol</label><span className="profile-role-badge">{rol || 'No disponible'}</span></div>
             <button className="btn btn--primary" disabled={loadingName}>{loadingName ? 'Guardando...' : 'Guardar cambios'}</button>
           </div>
         </form>

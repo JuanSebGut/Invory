@@ -157,7 +157,7 @@ export default function UsersPage() {
   }
 
   return (
-    <>
+    <div className="u-page">
       {/* Cabecera */}
       <div className="u-page-header">
         <div className="u-page-heading">
@@ -453,6 +453,6 @@ export default function UsersPage() {
           </div>
         </div>
       )}
-    </>
+    </div>
   )
 }

@@ -25,6 +25,7 @@
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
+  align-items: stretch;
 }
 
 .al-kpi-card {
@@ -33,6 +34,11 @@
   background: #fff;
   box-shadow: var(--shadow-sm);
   padding: 14px;
+  min-height: 128px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  align-items: center;
 }
 .al-kpi-card--low { border-top: 4px solid #d74d4d; }
 .al-kpi-card--high { border-top: 4px solid #d58b1b; }
@@ -55,10 +61,11 @@
 .al-kpi-icon--high { background: #fff4df; color: #d58b1b; }
 .al-kpi-icon--expiring { background: #e8f3f8; color: #1f6f8b; }
 .al-kpi-icon--ok { background: #e7f7ef; color: #238d63; }
-.al-kpi-info { margin-top: 8px; }
+.al-kpi-info { margin-top: 0; min-width: 0; }
 .al-kpi-count { font-size: 28px; font-weight: 800; color: #112831; }
 .al-kpi-label { margin-top: 3px; font-size: 12px; font-weight: 700; color: #3c5a67; }
 .al-kpi-hint { margin-top: 3px; font-size: 12px; color: #6a8792; }
+.al-kpi-card--summary { cursor: default; }
 
 .al-filters {
   background: #fff;
@@ -71,8 +78,30 @@
   align-items: flex-end;
   flex-wrap: wrap;
 }
+.al-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1 1 420px;
+}
+.al-filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 220px;
+}
+.al-filter-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: end;
+}
 .al-filter-label { font-size: 11px; font-weight: 700; color: #567784; text-transform: uppercase; }
 .al-filter-select { min-width: 200px; padding: 9px 12px; }
+.al-filter-select,
+.al-type-chip {
+  font-size: 12px;
+  font-weight: 700;
+}
 .al-type-chips { display: flex; gap: 8px; flex-wrap: wrap; }
 .al-type-chip {
   border: 1px solid var(--line-strong);
@@ -131,6 +160,7 @@
   padding: 12px 14px;
   border-bottom: 1px solid #e7eff2;
   font-size: 13px;
+  vertical-align: middle;
 }
 .al-table tbody tr:last-child td { border-bottom: none; }
 .al-table tbody tr:hover td { background: #f5fbfd; }
@@ -165,6 +195,8 @@
   .al-kpi-grid { grid-template-columns: 1fr; }
   .al-filters { align-items: stretch; }
   .al-filter-select { min-width: 100%; }
+  .al-filter-field { min-width: 100%; }
+  .al-filter-actions { margin-left: 0; }
 }
 /* ==== Pixel Polish Alerts ==== */
 .al-page { gap: 14px; }

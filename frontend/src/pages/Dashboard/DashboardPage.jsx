@@ -5,6 +5,14 @@ import { getAlerts } from '../../api/alerts.js'
 import { getReport } from '../../api/reports.js'
 import './dashboard.css'
 
+function normalizeAlerts(payload) {
+  if (Array.isArray(payload)) return payload
+  if (Array.isArray(payload?.data)) return payload.data
+  if (Array.isArray(payload?.data?.data)) return payload.data.data
+  if (Array.isArray(payload?.items)) return payload.items
+  return []
+}
+
 function todayDate() {
   const now = new Date()
   const pad = (n) => String(n).padStart(2, '0')
@@ -43,13 +51,13 @@ export default function DashboardPage() {
       setLoading(true)
       const [sales, alerts, movementsToday, stockReport, recent] = await Promise.allSettled([
         getReport('sales', { fecha_inicio: today, fecha_fin: today }),
-        getAlerts({ type: 'low-stock' }),
+        getAlerts({ types: ['low-stock', 'high-stock', 'expiring-soon'] }),
         getMovimientos({ fecha: today, page: 1, size: 1 }),
         getReport('stock', {}),
         getMovimientos({ page: 1, size: 8 }),
       ])
 
-      const alertsData = alerts.status === 'fulfilled' ? (alerts.value?.data ?? []) : []
+      const alertsData = alerts.status === 'fulfilled' ? normalizeAlerts(alerts.value) : []
       const grouped = alertsData.reduce((acc, a) => {
         const key = a.type || 'otro'
         acc[key] = (acc[key] || 0) + 1
@@ -82,7 +90,12 @@ export default function DashboardPage() {
             {loading ? <div className="kpi-card__skeleton" /> : <p className="kpi-card__value">{formatMoney(kpi.salesToday)}</p>}
           </article>
           <article className="kpi-card kpi-card--critical" onClick={() => navigate('/alertas')}>
-            <p className="kpi-card__label">Stock Alertas</p>
+            <p className="kpi-card__label">
+              Stock Alertas
+              {!loading && Number(kpi.lowStock || 0) > 0 && (
+                <span className="kpi-alert-indicator" title="Hay alertas activas" />
+              )}
+            </p>
             {loading ? <div className="kpi-card__skeleton" /> : <p className="kpi-card__value">{kpi.lowStock ?? 'Aaa'}</p>}
           </article>
           <article className="kpi-card kpi-card--moves">
@@ -94,16 +107,6 @@ export default function DashboardPage() {
             {loading ? <div className="kpi-card__skeleton" /> : <p className="kpi-card__value">{formatMoney(kpi.stockValue)}</p>}
           </article>
         </section>
-
-        {!!Object.keys(alertsByType).length && (
-          <section className="kpi-card">
-            <p className="kpi-card__label">Alertas activas</p>
-            <p className="kpi-card__value" style={{ fontSize: 16 }}>
-              {Object.entries(alertsByType).map(([k, v]) => `${k}: ${v}`).join(' AA ')}
-            </p>
-            <button className="btn btn--ghost btn--sm" onClick={() => navigate('/alertas')}>Ver todas las alertas</button>
-          </section>
-        )}
 
         <section className="kpi-card">
           <p className="kpi-card__label">Ultimos movimientos</p>

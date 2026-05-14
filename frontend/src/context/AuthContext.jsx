@@ -61,6 +61,18 @@ export function AuthProvider({ children }) {
   }, [])
 
   /**
+   * Actualiza parcialmente el usuario en contexto/localStorage
+   * (por ejemplo, cuando el perfil cambia nombre/correo).
+   */
+  const updateUser = useCallback((patch = {}) => {
+    setUser((prev) => {
+      const next = { ...(prev || {}), ...patch }
+      localStorage.setItem(USER_KEY, JSON.stringify(next))
+      return next
+    })
+  }, [])
+
+  /**
    * Cerrar sesion: limpia localStorage y estado
    */
 const logout = useCallback(async () => {
@@ -80,7 +92,7 @@ const logout = useCallback(async () => {
   const isAuthenticated = !!token && !!user
 
   return (
-    <AuthContext.Provider value={{ user, token, isAuthenticated, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ user, token, isAuthenticated, isLoading, login, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   )

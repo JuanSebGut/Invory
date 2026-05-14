@@ -5,6 +5,7 @@ import { BrowserRouter } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext.jsx'
 import App from './App'
 import './App.css'
+import './theme-unify.css'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

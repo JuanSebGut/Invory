@@ -512,6 +512,10 @@
 ───────────────────────────────────────────── */
 .u-form-grid  { display: flex; flex-direction: column; gap: 16px; }
 .u-form-row   { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 760px) {
+  .u-form-row { grid-template-columns: 1fr; }
+  .u-modal { max-width: 100%; }
+}
 
 .u-form-field { display: flex; flex-direction: column; gap: 6px; }
 
@@ -529,9 +533,9 @@
 .u-form-field input,
 .u-form-field select {
   padding:       10px 12px;
-  border:        1.5px solid var(--border-strong);
+  border:        1.5px solid #a9bcc9 !important;
   border-radius: var(--radius-sm);
-  background:    var(--bg);
+  background:    #ffffff !important;
   font-family:   var(--font-main);
   font-size:     13.5px;
   color:         var(--text);
@@ -543,8 +547,8 @@
 .u-form-field input::placeholder { color: var(--text-soft); }
 .u-form-field input:focus,
 .u-form-field select:focus {
-  border-color: var(--primary);
-  box-shadow:   0 0 0 3px rgba(37,99,235,.15);
+  border-color: #2563eb !important;
+  box-shadow:   0 0 0 3px rgba(37,99,235,.12);
 }
 .u-form-field input.is-error { border-color: var(--danger); }
 .u-form-field input:disabled {

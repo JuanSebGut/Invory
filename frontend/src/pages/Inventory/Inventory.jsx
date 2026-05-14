@@ -93,6 +93,62 @@ export default function Inventory() {
 
   const montoRecibido = Number(form.monto_pagado || 0)
   const diferencia = montoRecibido - totalVenta
+  const isQtyValid = (value) => Number.isInteger(Number(value)) && Number(value) > 0
+
+  const shouldShowForceMinimo = useMemo(() => {
+    if (!isAdmin) return false
+
+    const getStockInfo = (idProducto) => {
+      const p = productos.find((x) => String(x.id_producto ?? x.id) === String(idProducto))
+      if (!p) return null
+      const stockActual = Number(p.stock_actual ?? p.stockActual ?? 0)
+      const stockMinimo = Number(p.stock_minimo ?? p.stockMinimo ?? 0)
+      if (!Number.isFinite(stockActual) || !Number.isFinite(stockMinimo)) return null
+      return { stockActual, stockMinimo }
+    }
+
+    if (isVentaMulti) {
+      const stockTracker = new Map()
+      for (const linea of lineasVenta) {
+        if (!linea.id_producto || !isQtyValid(linea.cantidad)) continue
+        const info = getStockInfo(linea.id_producto)
+        if (!info) continue
+        const key = String(linea.id_producto)
+        const remaining = stockTracker.has(key) ? stockTracker.get(key) : info.stockActual
+        const next = remaining - Number(linea.cantidad)
+        stockTracker.set(key, next)
+        if (next < info.stockMinimo) return true
+      }
+      return false
+    }
+
+    if (!form.id_producto || !isQtyValid(form.cantidad)) return false
+    const info = getStockInfo(form.id_producto)
+    if (!info) return false
+
+    const reducesStock =
+      tipoMovimiento === 'salida' ||
+      (tipoMovimiento === 'ajuste' && form.tipo_ajuste === 'faltante')
+
+    if (!reducesStock) return false
+    const projected = info.stockActual - Number(form.cantidad)
+    return projected < info.stockMinimo
+  }, [
+    isAdmin,
+    isVentaMulti,
+    lineasVenta,
+    productos,
+    form.id_producto,
+    form.cantidad,
+    form.tipo_ajuste,
+    tipoMovimiento,
+  ])
+
+  useEffect(() => {
+    if (!shouldShowForceMinimo && form.force_minimo) {
+      setForm((p) => ({ ...p, force_minimo: false }))
+    }
+  }, [shouldShowForceMinimo, form.force_minimo])
 
   function resetByTipo(tipo) {
     setTipoMovimiento(tipo)
@@ -228,6 +284,13 @@ export default function Inventory() {
     }
   }
 
+  function registrarOtroMovimiento() {
+    setResultado(null)
+    setError('')
+    setForm({ ...INITIAL_FORM, numero_factura: generarNumeroFactura(tipoMovimiento) })
+    setLineasVenta([{ id_producto: '', cantidad: 1, precio_venta: 0 }])
+  }
+
   return (
     <div className="inv-page">
       <div className="inv-page__header">
@@ -239,6 +302,42 @@ export default function Inventory() {
 
       <div className="inv-card">
         <div className="inv-card__body">
+          {resultado ? (
+            <div className="registro-result">
+              {resultado.tipo === 'venta_multiproducto' && (
+                <>
+                  <h3 className="registro-result__title">Venta multiproducto registrada</h3>
+                  <p className="registro-result__detail">Factura: <strong>{resultado.numero_factura}</strong></p>
+                  <p className="registro-result__detail">Total venta: <strong>{resultado.totalVenta}</strong></p>
+                  {resultado.monto_pagado != null && (
+                    <p className="registro-result__detail">Monto recibido: <strong>{resultado.monto_pagado}</strong> · Vuelto: <strong>{resultado.vuelto}</strong></p>
+                  )}
+                </>
+              )}
+              {resultado.tipo === 'venta_multiproducto_parcial' && (
+                <>
+                  <h3 className="registro-result__title">Venta multiproducto parcial</h3>
+                  <p className="registro-result__detail">Factura: <strong>{resultado.numero_factura}</strong></p>
+                  <p className="registro-result__detail">Procesadas: <strong>{resultado.procesadas?.length || 0}</strong> · Fallidas: <strong>{resultado.errores?.length || 0}</strong></p>
+                </>
+              )}
+              {!['venta_multiproducto', 'venta_multiproducto_parcial'].includes(resultado.tipo) && (
+                <>
+                  <h3 className="registro-result__title">Movimiento registrado</h3>
+                  <p className="registro-result__detail">
+                    <strong>{resultado.nombre_producto}</strong> · {Number(resultado.cantidad)} unidades
+                    {resultado.numero_factura ? ` · Factura: ${resultado.numero_factura}` : ''}
+                  </p>
+                </>
+              )}
+              <div style={{ marginTop: 8 }}>
+                <button type="button" className="btn btn--primary" onClick={registrarOtroMovimiento}>
+                  Registrar otro movimiento
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
           <div className="tipo-selector">
             <button type="button" className={`tipo-btn ${tipoMovimiento === 'entrada' ? 'active--entrada' : ''}`} onClick={() => resetByTipo('entrada')}>Entrada</button>
             <button type="button" className={`tipo-btn ${tipoMovimiento === 'salida' ? 'active--salida' : ''}`} onClick={() => resetByTipo('salida')}>Salida</button>
@@ -330,7 +429,7 @@ export default function Inventory() {
             </>
           ) : (
             <>
-              <div className="form-row">
+              <div className="form-row inv-salida-main-row">
                 <div className="field">
                   <label className="field__label">Producto</label>
                   <select className="field__select" value={form.id_producto} onChange={(e) => setForm((p) => ({ ...p, id_producto: e.target.value }))}>
@@ -345,7 +444,7 @@ export default function Inventory() {
               </div>
 
               {tipoMovimiento === 'entrada' && (
-                <div className="field">
+                <div className="field inv-entrada-proveedor">
                   <label className="field__label">Proveedor (opcional)</label>
                   <select className="field__select" value={form.id_proveedor} onChange={(e) => setForm((p) => ({ ...p, id_proveedor: e.target.value }))}>
                     <option value="">Sin proveedor</option>
@@ -359,20 +458,21 @@ export default function Inventory() {
               )}
 
               {tipoMovimiento === 'ajuste' && (
-                <div className="form-row">
-                  <div className="field">
+                <>
+                  <div className="field inv-ajuste-tipo">
                     <label className="field__label">Tipo de ajuste</label>
                     <select className="field__select" value={form.tipo_ajuste} onChange={(e) => setForm((p) => ({ ...p, tipo_ajuste: e.target.value }))}>
                       <option value="sobrante">Sobrante (+)</option>
                       <option value="faltante">Faltante (-)</option>
                     </select>
                   </div>
-                  <div className="field">
+                  <div className="field inv-ajuste-motivo">
                     <label className="field__label">Motivo del ajuste</label>
                     <input className="field__input" value={form.motivo_ajuste} onChange={(e) => setForm((p) => ({ ...p, motivo_ajuste: e.target.value }))} />
                   </div>
-                </div>
+                </>
               )}
+
             </>
           )}
 
@@ -381,7 +481,7 @@ export default function Inventory() {
             <input className="field__input" value={form.comentario} onChange={(e) => setForm((p) => ({ ...p, comentario: e.target.value }))} />
           </div>
 
-          {isAdmin && (
+          {isAdmin && shouldShowForceMinimo && (
             <div className="field" style={{ marginTop: 8 }}>
               <label className="field__label" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <input
@@ -407,33 +507,7 @@ export default function Inventory() {
               {loading ? 'Registrando...' : 'Registrar'}
             </button>
           </div>
-
-          {resultado && (
-            <div className="registro-result">
-              {resultado.tipo === 'venta_multiproducto' && (
-                <>
-                  <h3 className="registro-result__title">Venta multiproducto registrada</h3>
-                  <p className="registro-result__detail">Factura: <strong>{resultado.numero_factura}</strong></p>
-                  <p className="registro-result__detail">Total venta: <strong>{resultado.totalVenta}</strong></p>
-                </>
-              )}
-              {resultado.tipo === 'venta_multiproducto_parcial' && (
-                <>
-                  <h3 className="registro-result__title">Venta multiproducto parcial</h3>
-                  <p className="registro-result__detail">Factura: <strong>{resultado.numero_factura}</strong></p>
-                  <p className="registro-result__detail">Procesadas: <strong>{resultado.procesadas?.length || 0}</strong> · Fallidas: <strong>{resultado.errores?.length || 0}</strong></p>
-                </>
-              )}
-              {!['venta_multiproducto', 'venta_multiproducto_parcial'].includes(resultado.tipo) && (
-                <>
-                  <h3 className="registro-result__title">Movimiento registrado</h3>
-                  <p className="registro-result__detail">
-                    <strong>{resultado.nombre_producto}</strong> · {Number(resultado.cantidad)} unidades
-                    {resultado.numero_factura ? ` · Factura: ${resultado.numero_factura}` : ''}
-                  </p>
-                </>
-              )}
-            </div>
+            </>
           )}
 
           <div style={{ marginTop: '18px' }}>

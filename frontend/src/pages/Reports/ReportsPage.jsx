@@ -164,6 +164,11 @@ function SummaryCards({ summary, reportType }) {
         },
         { label: 'Margen de ganancia', value: summary.profit_margin ?? 0, format: 'percent' },
       ]
+    : reportType === 'movements'
+      ? [
+          { label: 'Registros', value: summary.total_items ?? 0, format: 'number' },
+          { label: 'Cantidad total', value: summary.total_quantity ?? 0, format: 'number' },
+        ]
     : [
         { label: 'Registros', value: summary.total_items ?? 0, format: 'number' },
         { label: 'Cantidad total', value: summary.total_quantity ?? 0, format: 'number' },
@@ -206,6 +211,13 @@ function BadgeTipo({ tipo }) {
 
 function ReportTable({ columns, items }) {
   if (!columns || !items) return null
+  const toMoney = (value) => {
+    if (value == null || value === '') return null
+    if (typeof value === 'number') return value
+    const normalized = String(value).replace(/\s/g, '').replace(/\./g, '').replace(',', '.')
+    const parsed = Number(normalized)
+    return Number.isFinite(parsed) ? parsed : null
+  }
 
   function renderCell(col, item) {
     const val = item[col.key]
@@ -217,9 +229,10 @@ function ReportTable({ columns, items }) {
       return <span className={className}>{`${prefix}${Math.abs(amount).toLocaleString('es-CO', { minimumFractionDigits: 2 })}`}</span>
     }
     if (['valor_total', 'precio_unitario', 'costo_unitario', 'costo_total', 'monto_pagado', 'vuelto'].includes(col.key)) {
-      return val != null
-        ? `$${Number(val).toLocaleString('es-CO', { minimumFractionDigits: 2 })}`
-        : 'Aaa'
+      const amount = toMoney(val)
+      return amount != null
+        ? `$${amount.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+        : '-'
     }
     if (col.key === 'cantidad' || col.key === 'stock_anterior' || col.key === 'stock_posterior') {
       return val != null ? Number(val).toLocaleString('es-CO') : 'Aaa'

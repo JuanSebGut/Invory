@@ -886,6 +886,18 @@ AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAa
 .venta-resumen {
   margin-top: 10px;
 }
+.inv-salida-main-row {
+  margin-top: 12px;
+}
+.inv-entrada-proveedor {
+  margin-top: 14px;
+}
+.inv-ajuste-tipo {
+  margin-top: 14px;
+}
+.inv-ajuste-motivo {
+  margin-top: 12px;
+}
 @media (max-width: 920px) {
   .venta-linea__grid {
     grid-template-columns: 1fr 1fr;

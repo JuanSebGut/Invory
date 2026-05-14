@@ -1,0 +1,101 @@
+﻿/* Uniformidad global frontend */
+:root {
+  --ui-radius: 14px;
+  --ui-radius-sm: 10px;
+  --ui-border: 1px solid var(--line);
+  --ui-shadow: var(--shadow-sm);
+}
+
+.cat-page__header,
+.rp-page__header,
+.u-page-header,
+.prov-page__header,
+.prod-page__header,
+.inv-page__header,
+.history-page__header,
+.al-page__header,
+.audit-page__header,
+.profile-page__header {
+  background: #fff;
+  border: var(--ui-border);
+  border-radius: var(--ui-radius);
+  box-shadow: var(--ui-shadow);
+  padding: 16px 18px;
+}
+
+.table-card,
+.u-table-card,
+.rp-card,
+.inv-card,
+.history-page__table-wrap,
+.prov-card,
+.prod-card,
+.audit-card,
+.al-table-card {
+  background: #fff !important;
+  border: var(--ui-border) !important;
+  border-radius: var(--ui-radius) !important;
+  box-shadow: var(--ui-shadow) !important;
+}
+
+.cat-table,
+.u-table,
+.report-table,
+.history-page__table,
+.prov-table,
+.prod-table,
+.inv-table,
+.audit-table,
+.al-table {
+  border: var(--ui-border) !important;
+  border-radius: 12px !important;
+  overflow: hidden;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: #fff;
+}
+
+.cat-table th,
+.u-table th,
+.report-table th,
+.history-page__table th,
+.prov-table th,
+.prod-table th,
+.inv-table th,
+.audit-table th,
+.al-table th {
+  background: #edf6f9 !important;
+  border-bottom: 1px solid var(--line) !important;
+  font-size: 11px !important;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.cat-table td,
+.u-table td,
+.report-table td,
+.history-page__table td,
+.prov-table td,
+.prod-table td,
+.inv-table td,
+.audit-table td,
+.al-table td {
+  border-bottom: 1px solid #e7eff2 !important;
+  font-size: 13px !important;
+}
+
+.btn,
+.u-btn,
+button[class*='btn'] {
+  border-radius: var(--ui-radius-sm) !important;
+  font-weight: 700 !important;
+}
+
+.u-modal,
+.modal,
+.rp-card,
+.login-card {
+  border-radius: var(--ui-radius) !important;
+}
+
+.login-topbar { min-height: 74px; }

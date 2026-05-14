@@ -1,5 +1,12 @@
 .dashboard { width: min(1320px, 100%); margin: 0 auto; padding: 24px; }
-.dashboard__header { margin-bottom: 14px; }
+.dashboard__header {
+  margin-bottom: 14px;
+  padding: 16px 18px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
+}
 .dashboard__title { font-size: 28px; }
 .dashboard__subtitle { margin-top: 6px; color: #4f6c63; }
 .dashboard__body { display: grid; gap: 14px; }
@@ -16,6 +23,15 @@
 .kpi-card--moves { border-top: 4px solid #2f7d68; }
 .kpi-card--value { border-top: 4px solid #e4a94a; }
 .kpi-card__label { font-weight: 700; color: #2a4e42; font-size: 13px; }
+.kpi-card__label { display: inline-flex; align-items: center; gap: 8px; }
+.kpi-alert-indicator {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.16);
+  animation: kpi-pulse 1.4s infinite;
+}
 .kpi-card__value { margin-top: 10px; font-size: 30px; font-weight: 800; color: #16382f; letter-spacing: -0.02em; }
 .kpi-card__skeleton {
   margin-top: 10px;
@@ -33,6 +49,11 @@
 @keyframes iv-pulse {
   0% { background-position: 100% 50%; }
   100% { background-position: 0 50%; }
+}
+@keyframes kpi-pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.15); opacity: .85; }
+  100% { transform: scale(1); opacity: 1; }
 }
 
 @media (max-width: 1180px) {
