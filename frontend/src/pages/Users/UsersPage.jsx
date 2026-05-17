@@ -1,6 +1,6 @@
-﻿import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../../hooks/useAuth'
-import { getUsers, createUser, updateUser, disableUser } from '../../api/users'
+import { getUsers, createUser, updateUser, disableUser, resetUserPassword } from '../../api/users'
 import './users.css'
 
 const EMPTY_FORM = { nombre: '', correo: '', contrasena: '', id_rol: 2, estado: 'activo' }
@@ -55,6 +55,10 @@ export default function UsersPage() {
 
   const [confirmUser, setConfirmUser] = useState(null)
   const [confirmLoading, setConfirmLoading] = useState(false)
+  const [resetUser, setResetUser] = useState(null)
+  const [resetForm, setResetForm] = useState({ nueva: '', confirmar: '' })
+  const [resetLoading, setResetLoading] = useState(false)
+  const [resetError, setResetError] = useState('')
 
   const fetchUsers = useCallback(async () => {
     setLoading(true)
@@ -156,6 +160,39 @@ export default function UsersPage() {
     }
   }
 
+  function openResetPassword(user) {
+    setResetUser(user)
+    setResetForm({ nueva: '', confirmar: '' })
+    setResetError('')
+  }
+
+  async function handleResetPassword(event) {
+    event.preventDefault()
+    const nueva = resetForm.nueva.trim()
+    const confirmar = resetForm.confirmar.trim()
+
+    if (nueva.length < 8) {
+      setResetError('La nueva contraseña debe tener mínimo 8 caracteres.')
+      return
+    }
+
+    if (nueva !== confirmar) {
+      setResetError('La confirmación no coincide con la contraseña.')
+      return
+    }
+
+    setResetLoading(true)
+    setResetError('')
+    try {
+      await resetUserPassword(resetUser.id_usuario, nueva)
+      setResetUser(null)
+    } catch (err) {
+      setResetError(err.message || 'No fue posible cambiar la contraseña.')
+    } finally {
+      setResetLoading(false)
+    }
+  }
+
   return (
     <div className="u-page">
       {/* Cabecera */}
@@ -165,7 +202,7 @@ export default function UsersPage() {
           <p className="u-page-subtitle">Administra las cuentas de acceso al sistema</p>
         </div>
         <button className="u-btn u-btn--primary" onClick={openCreate}>
-          + Nuevo usuario
+          Nuevo usuario
         </button>
       </div>
 
@@ -231,7 +268,6 @@ export default function UsersPage() {
                     <tr key={u.id_usuario}>
                       <td>
                         <div className="u-user-cell">
-                          <div className="u-avatar">{getInitials(u.nombre)}</div>
                           <span className="u-user-name">{u.nombre}</span>
                         </div>
                       </td>
@@ -257,6 +293,9 @@ export default function UsersPage() {
                         <div className="u-actions-group">
                           <button className="u-btn u-btn--outline u-btn--sm" onClick={() => openEdit(u)}>
                             Editar
+                          </button>
+                          <button className="u-btn u-btn--ghost u-btn--sm" onClick={() => openResetPassword(u)}>
+                            Cambiar contraseña
                           </button>
                           <button
                             className="u-btn u-btn--danger u-btn--sm"
@@ -410,6 +449,64 @@ export default function UsersPage() {
                 </button>
                 <button type="submit" className="u-btn u-btn--primary" disabled={formLoading}>
                   {formLoading ? 'Guardando…' : editing ? 'Guardar cambios' : 'Crear usuario'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {resetUser && (
+        <div
+          className="u-modal-backdrop"
+          onClick={(e) => { if (e.target === e.currentTarget) setResetUser(null) }}
+        >
+          <div className="u-modal">
+            <div className="u-modal__header">
+              <h3 className="u-modal__title">Cambiar contraseña</h3>
+              <button className="u-modal__close" onClick={() => setResetUser(null)} type="button">
+                <IconClose />
+              </button>
+            </div>
+
+            <form onSubmit={handleResetPassword}>
+              <div className="u-modal__body">
+                <div className="u-form-grid">
+                  <div className="u-form-field">
+                    <label>Nueva contraseña <span className="u-required">*</span></label>
+                    <input
+                      type="password"
+                      placeholder="Mínimo 8 caracteres"
+                      value={resetForm.nueva}
+                      onChange={(e) => setResetForm((state) => ({ ...state, nueva: e.target.value }))}
+                    />
+                  </div>
+
+                  <div className="u-form-field">
+                    <label>Confirmar contraseña <span className="u-required">*</span></label>
+                    <input
+                      type="password"
+                      placeholder="Repite la contraseña"
+                      value={resetForm.confirmar}
+                      onChange={(e) => setResetForm((state) => ({ ...state, confirmar: e.target.value }))}
+                    />
+                  </div>
+
+                  {resetError && (
+                    <div className="u-form-error-banner">
+                      <IconAlert />
+                      {resetError}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="u-modal__footer">
+                <button type="button" className="u-btn u-btn--ghost" onClick={() => setResetUser(null)}>
+                  Cancelar
+                </button>
+                <button type="submit" className="u-btn u-btn--primary" disabled={resetLoading}>
+                  {resetLoading ? 'Actualizando…' : 'Guardar contraseña'}
                 </button>
               </div>
             </form>

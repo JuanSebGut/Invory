@@ -85,6 +85,18 @@ class UserAuditNotifier {
       newData: sanitizeUser(currentUser),
     });
   }
+
+  async notifyPasswordReset({ actorContext, targetUserId }) {
+    await this.post({
+      event: 'RESET_PASSWORD',
+      id_usuario: actorContext?.userId || undefined,
+      entidad_afectada: 'usuarios',
+      id_entidad_afectada: targetUserId,
+      detail: {
+        mensaje: 'Contrasena restablecida por administrador',
+      },
+    });
+  }
 }
 
 module.exports = { UserAuditNotifier };

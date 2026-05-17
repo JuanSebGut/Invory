@@ -118,3 +118,8 @@ export function deleteProducto(id) {
 export function getCategoriasActivas() {
   return apiFetch('/categories?estado=activo')
 }
+
+/** Obtener unidades de medida */
+export function getUnidadesMedida() {
+  return apiFetch('/products/units')
+}

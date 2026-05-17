@@ -1,4 +1,4 @@
-﻿const { Router } = require('express');
+const { Router } = require('express');
 
 const { ADMINISTRADOR, EMPLEADO } = require('../../../shared/constants/roles');
 
@@ -88,7 +88,7 @@ function createProductRoutes({ productServiceUrl, authMiddleware, fetchImpl = fe
   router.post(
     '/',
     authMiddleware,
-    requireRoles([ADMINISTRADOR]),
+    requireRoles([ADMINISTRADOR, EMPLEADO]),
     (req, res, next) =>
       proxyToProductService(
         req,
@@ -103,7 +103,7 @@ function createProductRoutes({ productServiceUrl, authMiddleware, fetchImpl = fe
   router.put(
     '/:id',
     authMiddleware,
-    requireRoles([ADMINISTRADOR]),
+    requireRoles([ADMINISTRADOR, EMPLEADO]),
     (req, res, next) =>
       proxyToProductService(
         req,

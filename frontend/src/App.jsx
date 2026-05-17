@@ -1,4 +1,4 @@
-﻿// src/App.jsx na con ruta de Productos (MS-04)
+// src/App.jsx na con ruta de Productos (MS-04)
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './hooks/useAuth.js'
 import Login from './pages/Login/login'
@@ -14,6 +14,8 @@ import ProvidersPage from './pages/Providers/ProvidersPage.jsx'
 import DashboardPage from './pages/Dashboard/DashboardPage.jsx'
 import ProfilePage from './pages/Profile/ProfilePage.jsx'
 import HistoryPage from './pages/History/HistoryPage.jsx'
+import ClientsPage from './pages/Clients/ClientsPage.jsx'
+import InvoicesPage from './pages/Invoices/InvoicesPage.jsx'
 
 function HomeRedirect() {
   const { isAuthenticated, isLoading } = useAuth()
@@ -64,11 +66,11 @@ export default function App() {
       } />
 
       <Route path="/categorias" element={
-        <PrivateRoute>
+        <AdminRoute>
           <Layout>
             <Categories />
           </Layout>
-        </PrivateRoute>
+        </AdminRoute>
       } />
 
       {/* MS-02 na solo Administrador */}
@@ -119,6 +121,22 @@ export default function App() {
         <PrivateRoute>
           <Layout>
             <ReportsPage />
+          </Layout>
+        </PrivateRoute>
+      } />
+
+      <Route path="/clientes" element={
+        <PrivateRoute>
+          <Layout>
+            <ClientsPage />
+          </Layout>
+        </PrivateRoute>
+      } />
+
+      <Route path="/facturas" element={
+        <PrivateRoute>
+          <Layout>
+            <InvoicesPage />
           </Layout>
         </PrivateRoute>
       } />

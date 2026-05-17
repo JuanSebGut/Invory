@@ -22,6 +22,7 @@ const { ADMINISTRADOR, EMPLEADO } = require('../../../../shared/constants/roles'
 const {
   ALERT_TYPES,
   EXPIRING_SOON_DAYS,
+  INVOICE_STATES,
   MOVEMENT_TYPES,
   REPORT_TYPES,
   ValidationError,
@@ -55,6 +56,50 @@ function toReportNumber(value) {
 
 function roundCurrency(value) {
   return Number(value.toFixed(2));
+}
+
+function formatCurrency(value) {
+  return `$${roundCurrency(Number(value || 0)).toFixed(2)}`;
+}
+
+function normalizeRoleLabel(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLowerCase();
+}
+
+function isAdministradorRole(value) {
+  return normalizeRoleLabel(value) === normalizeRoleLabel(ADMINISTRADOR);
+}
+
+function isEmpleadoRole(value) {
+  return normalizeRoleLabel(value) === normalizeRoleLabel(EMPLEADO);
+}
+
+function allowsFractionalQuantity(product) {
+  if (typeof product?.permite_fraccion === 'boolean') {
+    return product.permite_fraccion;
+  }
+  const normalized = String(product?.permite_fraccion || '').trim().toLowerCase();
+  return normalized === 'true' || normalized === '1' || normalized === 't';
+}
+
+function hasFractionalPart(value) {
+  const normalized = Number(value);
+  if (!Number.isFinite(normalized)) {
+    return false;
+  }
+  return Math.abs(normalized % 1) > Number.EPSILON;
+}
+
+function normalizeReasonOperation(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLowerCase();
 }
 
 function formatDateInTimeZone(date = new Date(), timeZone = 'America/Bogota') {
@@ -133,6 +178,35 @@ function buildSalesSummary(items = []) {
   };
 }
 
+function buildPercentageVariation(actual, previous) {
+  const current = Number(actual || 0);
+  const prior = Number(previous || 0);
+  if (prior === 0) {
+    return current === 0 ? 0 : 100;
+  }
+  return Number((((current - prior) / prior) * 100).toFixed(2));
+}
+
+function buildReportNarrative(reportType, { filters, summary, totalItems }) {
+  if (reportType === REPORT_TYPES.MOVEMENTS) {
+    const desde = filters.fecha_inicio || 'inicio del período consultado';
+    const hasta = filters.fecha_fin || 'la fecha actual';
+    return `Durante el período del ${desde} al ${hasta}, se registraron ${summary.total_items} movimientos con una cantidad total de ${summary.total_quantity} unidades y un valor agregado de ${formatCurrency(summary.total_value)}.`;
+  }
+
+  if (reportType === REPORT_TYPES.SALES) {
+    const desde = filters.fecha_inicio || 'inicio del período consultado';
+    const hasta = filters.fecha_fin || 'la fecha actual';
+    return `Durante el período del ${desde} al ${hasta}, se consolidaron ventas por ${formatCurrency(summary.total_value)} con una ganancia estimada de ${formatCurrency(summary.total_profit)} y un margen del ${summary.profit_margin}%.`;
+  }
+
+  if (reportType === REPORT_TYPES.STOCK) {
+    return `El inventario actual incluye ${totalItems} productos activos con un valor total estimado de ${formatCurrency(summary.total_value)} y un stock acumulado de ${summary.total_quantity} unidades.`;
+  }
+
+  return '';
+}
+
 const REPORT_COLUMNS = Object.freeze({
   [REPORT_TYPES.MOVEMENTS]: [
     { key: 'fecha', label: 'Fecha' },
@@ -168,13 +242,19 @@ const REPORT_COLUMNS = Object.freeze({
 });
 
 function buildReportPayload(reportType, filters, items) {
+  const summary = reportType === REPORT_TYPES.SALES ? buildSalesSummary(items) : buildReportSummary(items);
   return {
     meta: {
       reportType,
       generatedAt: new Date().toISOString(),
       filters,
     },
-    summary: reportType === REPORT_TYPES.SALES ? buildSalesSummary(items) : buildReportSummary(items),
+    summary,
+    resumen_narrativo: buildReportNarrative(reportType, {
+      filters,
+      summary,
+      totalItems: items.length,
+    }),
     columns: REPORT_COLUMNS[reportType] || [],
     items,
   };
@@ -235,6 +315,7 @@ function formatMovementResponse(movement, actorRoleOverride) {
     tipo_ajuste: movement.tipo_ajuste || null,
     fecha_vencimiento: movement.fecha_vencimiento || null,
     id_proveedor: movement.id_proveedor || null,
+    id_factura: movement.id_factura || null,
     numero_factura: movement.numero_factura || null,
     monto_pagado: movement.monto_pagado ?? null,
   };
@@ -263,14 +344,6 @@ class InventoryService {
     }
 
     const role = actor.rol;
-
-    if (tipoMovimiento === MOVEMENT_TYPES.ADJUSTMENT && role !== ADMINISTRADOR) {
-      throw createHttpError(
-        403,
-        'INVENTORY_ADJUSTMENT_FORBIDDEN',
-        'No tiene permisos para registrar ajustes de inventario'
-      );
-    }
 
     if (![ADMINISTRADOR, EMPLEADO].includes(role)) {
       throw createHttpError(
@@ -368,10 +441,6 @@ class InventoryService {
    */
   async registerMovement(payload, { actor, force = false }) {
     this.assertPermissions(payload.tipo_movimiento, actor);
-    const isSale = payload.tipo_movimiento === MOVEMENT_TYPES.EXIT && payload.motivo === 'venta';
-    const montoPagadoVenta = isSale && typeof payload.monto_pagado === 'number'
-      ? payload.monto_pagado
-      : null;
 
     const persisted = await this.repository.runInTransaction(async (trx) => {
       const product = await this.repository.getProductById(payload.id_producto, {
@@ -383,12 +452,49 @@ class InventoryService {
         throw createHttpError(404, 'PRODUCT_NOT_FOUND', 'Producto no encontrado');
       }
 
+      if (!allowsFractionalQuantity(product) && hasFractionalPart(payload.cantidad)) {
+        throw createHttpError(
+          400,
+          'VALIDATION_ERROR',
+          'Este producto no permite cantidades fraccionadas. Ingrese una cantidad entera.'
+        );
+      }
+
       if (payload.id_proveedor) {
         const provider = await this.repository.getProviderById(payload.id_proveedor, { trx });
         if (!provider || !isActiveProvider(provider)) {
           throw createHttpError(404, 'SUPPLIER_NOT_FOUND', 'Proveedor no encontrado');
         }
       }
+
+      const reason = payload.id_motivo
+        ? await this.repository.getReasonById(payload.id_motivo, { trx })
+        : await this.repository.findReasonByPayload(payload, { trx });
+
+      if (!reason) {
+        throw createHttpError(
+          payload.id_motivo ? 404 : 500,
+          'MOVEMENT_REASON_NOT_FOUND',
+          payload.id_motivo
+            ? 'Motivo de movimiento no encontrado'
+            : 'No fue posible determinar el motivo del movimiento'
+        );
+      }
+
+      const reasonOperation = normalizeReasonOperation(reason.tipo_operacion);
+      if (reasonOperation === MOVEMENT_TYPES.ADJUSTMENT && isEmpleadoRole(actor.rol)) {
+        throw createHttpError(
+          403,
+          'INVENTORY_ADJUSTMENT_FORBIDDEN',
+          'Solo el administrador puede registrar ajustes de inventario.'
+        );
+      }
+
+      const isSale =
+        reasonOperation === MOVEMENT_TYPES.EXIT &&
+        normalizeSalesReason(reason.nombre_motivo || payload.motivo) === 'venta';
+      const montoPagadoVenta =
+        isSale && typeof payload.monto_pagado === 'number' ? payload.monto_pagado : null;
 
       const stockAnterior = Number(product.stock_actual || 0);
       const stockMinimo =
@@ -400,15 +506,6 @@ class InventoryService {
         force,
         actorRole: actor.rol,
       });
-      const reason = await this.repository.findReasonByPayload(payload, { trx });
-
-      if (!reason) {
-        throw createHttpError(
-          500,
-          'MOVEMENT_REASON_NOT_FOUND',
-          'No fue posible determinar el motivo del movimiento'
-        );
-      }
 
       const movement = await this.repository.createMovement(
         {
@@ -416,6 +513,7 @@ class InventoryService {
           id_usuario: actor.id_usuario,
           id_proveedor: payload.id_proveedor,
           id_motivo: reason.id_motivo,
+          id_factura: payload.id_factura,
           cantidad: payload.cantidad,
           stock_anterior: stockAnterior,
           stock_posterior: stockPosterior,
@@ -452,6 +550,7 @@ class InventoryService {
         movement_type: payload.tipo_movimiento,
         tipo_ajuste: payload.tipo_ajuste || null,
         fecha_vencimiento: payload.fecha_vencimiento || null,
+        id_factura: payload.id_factura || movement.id_factura || null,
         monto_pagado: montoPagadoVenta ?? movement.monto_pagado,
       };
     });
@@ -502,6 +601,182 @@ class InventoryService {
   async getStockReport(filters) {
     const items = await this.repository.getStockReportRows(filters);
     return buildReportPayload(REPORT_TYPES.STOCK, filters, items);
+  }
+
+  assertAdminOnlyReport(actorRole, reportType) {
+    if (!isAdministradorRole(actorRole)) {
+      throw createHttpError(
+        403,
+        'REPORT_FORBIDDEN',
+        `Solo el administrador puede consultar el reporte ${reportType}.`
+      );
+    }
+  }
+
+  async getProfitsReport(filters, { actorRole } = {}) {
+    this.assertAdminOnlyReport(actorRole, REPORT_TYPES.PROFITS);
+
+    const metrics = await this.repository.getProfitsMetrics(filters);
+    const total_ingresos = roundCurrency(Number(metrics.total_ingresos || 0));
+    const costo = roundCurrency(Number(metrics.costo || 0));
+    const ganancia_bruta = roundCurrency(total_ingresos - costo);
+    const margen_porcentual = total_ingresos > 0
+      ? Number(((ganancia_bruta / total_ingresos) * 100).toFixed(2))
+      : 0;
+
+    return {
+      fecha_desde: filters.fecha_desde,
+      fecha_hasta: filters.fecha_hasta,
+      total_ingresos,
+      costo,
+      ganancia_bruta,
+      margen_porcentual,
+      resumen_narrativo: `Durante el período del ${filters.fecha_desde} al ${filters.fecha_hasta}, se registraron ingresos por ${formatCurrency(total_ingresos)} y un costo de mercancía de ${formatCurrency(costo)}. La ganancia bruta fue de ${formatCurrency(ganancia_bruta)} correspondiente a un margen del ${margen_porcentual}%.`,
+    };
+  }
+
+  async getComparativeReport(filters, { actorRole } = {}) {
+    this.assertAdminOnlyReport(actorRole, REPORT_TYPES.COMPARATIVE);
+
+    const [periodoActual, periodoAnterior] = await Promise.all([
+      this.repository.getComparativeMetrics({
+        fecha_desde: filters.periodo_actual_desde,
+        fecha_hasta: filters.periodo_actual_hasta,
+      }),
+      this.repository.getComparativeMetrics({
+        fecha_desde: filters.periodo_anterior_desde,
+        fecha_hasta: filters.periodo_anterior_hasta,
+      }),
+    ]);
+
+    const indicadores = {
+      total_movimientos: {
+        periodo_actual: Number(periodoActual.total_movimientos || 0),
+        periodo_anterior: Number(periodoAnterior.total_movimientos || 0),
+      },
+      total_entradas: {
+        periodo_actual: Number(periodoActual.total_entradas || 0),
+        periodo_anterior: Number(periodoAnterior.total_entradas || 0),
+      },
+      total_salidas: {
+        periodo_actual: Number(periodoActual.total_salidas || 0),
+        periodo_anterior: Number(periodoAnterior.total_salidas || 0),
+      },
+      valor_inventario_cierre: {
+        periodo_actual: roundCurrency(Number(periodoActual.valor_inventario_cierre || 0)),
+        periodo_anterior: roundCurrency(Number(periodoAnterior.valor_inventario_cierre || 0)),
+      },
+    };
+
+    for (const indicador of Object.values(indicadores)) {
+      indicador.variacion_porcentual = buildPercentageVariation(
+        indicador.periodo_actual,
+        indicador.periodo_anterior
+      );
+    }
+
+    return {
+      periodos: {
+        actual: {
+          desde: filters.periodo_actual_desde,
+          hasta: filters.periodo_actual_hasta,
+        },
+        anterior: {
+          desde: filters.periodo_anterior_desde,
+          hasta: filters.periodo_anterior_hasta,
+        },
+      },
+      indicadores,
+      resumen_narrativo: `Comparando ${filters.periodo_actual_desde} a ${filters.periodo_actual_hasta} frente a ${filters.periodo_anterior_desde} a ${filters.periodo_anterior_hasta}, el total de movimientos varió ${indicadores.total_movimientos.variacion_porcentual}%, las entradas ${indicadores.total_entradas.variacion_porcentual}%, las salidas ${indicadores.total_salidas.variacion_porcentual}% y el valor de inventario al cierre ${indicadores.valor_inventario_cierre.variacion_porcentual}%.`,
+    };
+  }
+
+  async getNoMovementReport(filters) {
+    const items = await this.repository.getProductsWithoutMovement(filters);
+    return {
+      dias: filters.dias,
+      total_productos: items.length,
+      items,
+      resumen_narrativo: `Se identificaron ${items.length} productos sin movimientos en los últimos ${filters.dias} días.`,
+    };
+  }
+
+  async getByCategoryReport(_filters = {}) {
+    const items = await this.repository.getCategorySummaryRows();
+    const totalInventario = roundCurrency(
+      items.reduce(
+        (accumulator, item) => accumulator + Number(item.valor_total_inventario || 0),
+        0
+      )
+    );
+    return {
+      total_categorias: items.length,
+      items,
+      resumen_narrativo: `Las categorías activas acumulan un valor de inventario de ${formatCurrency(totalInventario)} con actividad de movimientos en los últimos 30 días.`,
+    };
+  }
+
+  async createInvoice(payload, { idUsuario }) {
+    if (!Number.isInteger(idUsuario) || idUsuario <= 0) {
+      throw createHttpError(400, 'VALIDATION_ERROR', 'Usuario emisor invalido');
+    }
+
+    const subtotal = roundCurrency(
+      payload.detalle.reduce(
+        (accumulator, item) => accumulator + Number(item.cantidad) * Number(item.precio_unitario),
+        0
+      )
+    );
+
+    const descuento = roundCurrency(Number(payload.descuento || 0));
+    if (descuento > subtotal) {
+      throw createHttpError(400, 'VALIDATION_ERROR', 'El descuento no puede superar el subtotal');
+    }
+
+    const total = roundCurrency(subtotal - descuento);
+    const invoice = await this.repository.createInvoice({
+      id_cliente: payload.id_cliente,
+      id_usuario: idUsuario,
+      detalle: payload.detalle,
+      descuento,
+      subtotal,
+      total,
+      tipo: payload.tipo,
+      observaciones: payload.observaciones || null,
+    });
+
+    return { data: invoice };
+  }
+
+  async listInvoices(filters) {
+    return this.repository.listInvoices(filters);
+  }
+
+  async getInvoiceById(idFactura) {
+    const invoice = await this.repository.getInvoiceById(idFactura);
+    if (!invoice) {
+      throw createHttpError(404, 'INVOICE_NOT_FOUND', 'Factura no encontrada');
+    }
+    return invoice;
+  }
+
+  async cancelInvoice(idFactura, { actorRole }) {
+    if (!isAdministradorRole(actorRole)) {
+      throw createHttpError(
+        403,
+        'INVOICE_CANCEL_FORBIDDEN',
+        'Solo un administrador puede anular facturas'
+      );
+    }
+
+    const updated = await this.repository.cancelInvoice(idFactura);
+    if (!updated) {
+      throw createHttpError(404, 'INVOICE_NOT_FOUND', 'Factura no encontrada');
+    }
+    if (updated.estado === INVOICE_STATES.CANCELED && updated.wasAlreadyCanceled) {
+      throw createHttpError(409, 'INVOICE_ALREADY_CANCELED', 'La factura ya se encuentra anulada');
+    }
+    return updated;
   }
 }
 
@@ -564,11 +839,76 @@ function applyAlertFilters(alerts, filters) {
   });
 }
 
+function mapFiadoAlertType(rawType) {
+  const normalized = String(rawType || '').trim().toLowerCase();
+  if (normalized === 'vencido') {
+    return ALERT_TYPES.FIADO_VENCIDO;
+  }
+  if (normalized === 'por_vencer') {
+    return ALERT_TYPES.FIADO_POR_VENCER;
+  }
+  return null;
+}
+
+async function fetchFiadoAlerts({
+  clientServiceUrl,
+  fetchImpl,
+}) {
+  if (!clientServiceUrl || typeof fetchImpl !== 'function') {
+    return [];
+  }
+
+  try {
+    const response = await fetchImpl(`${String(clientServiceUrl).replace(/\/$/, '')}/fiados/alertas`, {
+      method: 'GET',
+    });
+
+    if (!response.ok) {
+      console.error(
+        `[inventory-service] No fue posible obtener alertas de fiados: HTTP ${response.status}`
+      );
+      return [];
+    }
+
+    const payload = await response.json();
+    const items = Array.isArray(payload?.data?.items) ? payload.data.items : [];
+
+    return items
+      .map((item) => {
+        const type = mapFiadoAlertType(item.tipo_alerta);
+        if (!type) {
+          return null;
+        }
+
+        return {
+          type,
+          tipo: type,
+          id_fiado: item.id_fiado,
+          nombre_cliente: item.cliente_nombre || null,
+          monto_pendiente: item.saldo_pendiente,
+          fecha_pago_acordada: item.fecha_pago_acordada,
+        };
+      })
+      .filter(Boolean);
+  } catch (error) {
+    console.error(
+      '[inventory-service] Error consultando alertas de fiados en client-service:',
+      error?.message || error
+    );
+    return [];
+  }
+}
+
 /**
  * Factory functional para el servicio de alertas. Mantiene el contrato
  * histÃƒÂ³rico de MS-06: { getActiveAlerts(filters) -> { data, meta } }.
  */
-function createInventoryService({ repository, nowProvider = () => new Date().toISOString() } = {}) {
+function createInventoryService({
+  repository,
+  nowProvider = () => new Date().toISOString(),
+  fetchImpl = fetch,
+  clientServiceUrl = process.env.CLIENT_SERVICE_URL || 'http://localhost:3009',
+} = {}) {
   if (!repository || typeof repository.getAlertSourceRows !== 'function') {
     throw new ValidationError('Inventory repository must expose getAlertSourceRows(filters)');
   }
@@ -578,7 +918,9 @@ function createInventoryService({ repository, nowProvider = () => new Date().toI
       const filters = normalizeAlertFilters(rawFilters);
       const generatedAt = nowProvider();
       const sourceRows = await repository.getAlertSourceRows(filters);
-      const alerts = applyAlertFilters(deriveAlerts(sourceRows, { now: generatedAt }), filters);
+      const inventoryAlerts = deriveAlerts(sourceRows, { now: generatedAt });
+      const fiadoAlerts = await fetchFiadoAlerts({ clientServiceUrl, fetchImpl });
+      const alerts = applyAlertFilters([...inventoryAlerts, ...fiadoAlerts], filters);
 
       return {
         data: alerts,

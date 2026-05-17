@@ -141,3 +141,13 @@ export async function disableUser(id, authUser) {
   const body = await parseResponse(res)
   return body.data
 }
+
+export async function resetUserPassword(id, nuevaContrasena) {
+  const res = await fetch(`${BASE}/${id}/reset-password`, {
+    method: 'PUT',
+    headers: authHeaders(),
+    body: JSON.stringify({ nueva_contrasena: nuevaContrasena }),
+  })
+  const body = await parseResponse(res)
+  return body
+}

@@ -90,6 +90,20 @@ function createUserRoutes({ userServiceUrl, authMiddleware, fetchImpl = fetch })
   );
 
   router.get(
+    '/me',
+    authMiddleware,
+    (req, res, next) =>
+      proxyToUserService(
+        req,
+        res,
+        userServiceUrl,
+        `/api/users/${req.authUser.id_usuario}`,
+        'GET',
+        fetchImpl
+      ).catch(next)
+  );
+
+  router.get(
     '/:id',
     authMiddleware,
     requireRoles([ADMINISTRADOR]),
@@ -107,6 +121,7 @@ function createUserRoutes({ userServiceUrl, authMiddleware, fetchImpl = fetch })
   router.put(
     '/me',
     authMiddleware,
+    requireRoles([ADMINISTRADOR]),
     (req, res, next) => {
       req.params = { ...req.params, id: String(req.authUser.id_usuario) };
       return proxyToUserService(
@@ -118,6 +133,21 @@ function createUserRoutes({ userServiceUrl, authMiddleware, fetchImpl = fetch })
         fetchImpl
       ).catch(next);
     }
+  );
+
+  router.put(
+    '/:id/reset-password',
+    authMiddleware,
+    requireRoles([ADMINISTRADOR]),
+    (req, res, next) =>
+      proxyToUserService(
+        req,
+        res,
+        userServiceUrl,
+        `/api/users/${req.params.id}/reset-password`,
+        'PUT',
+        fetchImpl
+      ).catch(next)
   );
 
   router.put(

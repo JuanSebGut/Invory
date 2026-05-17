@@ -108,14 +108,20 @@ function parseLogFilters(query = {}) {
   const page = Math.max(1, Number(query.page || 1));
   const size = Math.min(100, Math.max(1, Number(query.size || 10)));
   const exactDate = normalizeOptionalDate(query.fecha, 'fecha');
-  const dateFrom = normalizeOptionalDate(query.fecha_inicio, 'fecha_inicio');
-  const dateTo = normalizeOptionalDate(query.fecha_fin, 'fecha_fin');
+  const dateFrom = normalizeOptionalDate(
+    query.fecha_desde || query.fecha_inicio,
+    query.fecha_desde ? 'fecha_desde' : 'fecha_inicio'
+  );
+  const dateTo = normalizeOptionalDate(
+    query.fecha_hasta || query.fecha_fin,
+    query.fecha_hasta ? 'fecha_hasta' : 'fecha_fin'
+  );
 
   if (!exactDate && dateFrom && dateTo && dateFrom > dateTo) {
     throw createHttpError(
       400,
       'VALIDATION_ERROR',
-      'fecha_inicio no puede ser mayor a fecha_fin'
+      'fecha_desde no puede ser mayor a fecha_hasta'
     );
   }
 
@@ -126,8 +132,19 @@ function parseLogFilters(query = {}) {
     dateFrom: exactDate ? undefined : dateFrom,
     dateTo: exactDate ? undefined : dateTo,
     user: normalizeOptionalString(query.usuario),
+    idUser: normalizePositiveInteger(query.id_usuario, 'id_usuario'),
+    entity: normalizeOptionalString(query.entidad_afectada)?.toLowerCase(),
+    actionId: normalizePositiveInteger(query.id_accion, 'id_accion'),
     module: normalizeOptionalString(query.modulo)?.toLowerCase(),
     action: normalizeOptionalString(query.accion || query.tipo_op)?.toLowerCase(),
+  };
+}
+
+function parseMovementLogFilters(query = {}) {
+  const base = parseLogFilters(query);
+  return {
+    ...base,
+    entity: 'movimientos_inventario',
   };
 }
 
@@ -135,4 +152,5 @@ module.exports = {
   createHttpError,
   parseAuditEventPayload,
   parseLogFilters,
+  parseMovementLogFilters,
 };

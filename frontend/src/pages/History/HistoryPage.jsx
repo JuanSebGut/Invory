@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { getMovimientos, getProductos } from '../../api/inventory'
 import './history.css'
 
@@ -82,6 +82,7 @@ export default function HistoryPage() {
               <th>Factura</th>
               <th>Movimiento</th>
               <th>Stock resultante</th>
+              <th>Comentarios</th>
               <th>Fecha y hora</th>
             </tr>
           </thead>
@@ -93,6 +94,7 @@ export default function HistoryPage() {
                 <td>{m.numero_factura || '-'}</td>
                 <td><span className={m.__mov.cls}>{m.__mov.text}</span></td>
                 <td>{m.nuevo_stock ?? m.stock_posterior}</td>
+                <td>{m.comentarios || m.comentario || '-'}</td>
                 <td>{m.__f.fecha} {m.__f.hora}</td>
               </tr>
             ))}

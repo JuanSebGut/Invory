@@ -18,6 +18,21 @@ class AuditService {
       logs: result.items,
     };
   }
+
+  async listMovementLogs(filters) {
+    const result = await this.repository.listLogs({
+      ...filters,
+      entity: 'movimientos_inventario',
+    });
+
+    return {
+      total: result.total,
+      page: result.page,
+      size: result.size,
+      totalPages: Math.ceil(result.total / result.size) || 1,
+      logs: result.items,
+    };
+  }
 }
 
 module.exports = { AuditService };

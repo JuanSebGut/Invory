@@ -186,13 +186,13 @@ td.table-empty {
 }
 .badge-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
 
-.badge-tipo--entrada  { background: #ECFDF5; color: #065F46; border-color: #6EE7B7; }
+.badge-tipo--entrada  { background: #ECFDF5; color: #065F46; border-color: var(--text-muted); }
 .badge-tipo--entrada  .badge-dot { background: #10B981; }
-.badge-tipo--salida   { background: #FEF2F2; color: #7F1D1D; border-color: #FCA5A5; }
+.badge-tipo--salida   { background: var(--bg); color: #7F1D1D; border-color: #FCA5A5; }
 .badge-tipo--salida   .badge-dot { background: #EF4444; }
-.badge-tipo--ajuste   { background: #FFFBEB; color: #92400E; border-color: #FCD34D; }
-.badge-tipo--ajuste   .badge-dot { background: #F59E0B; }
-.badge-tipo--venta    { background: #EFF6FF; color: #1e40af; border-color: #bfdbfe; }
+.badge-tipo--ajuste   { background: var(--bg); color: var(--text-muted); border-color: #FCD34D; }
+.badge-tipo--ajuste   .badge-dot { background: var(--bg); }
+.badge-tipo--venta    { background: #EFF6FF; color: var(--text-h); border-color: var(--border); }
 .badge-tipo--venta    .badge-dot { background: #2563EB; }
 
 /* AaaAaa Botones AaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaa */
@@ -389,16 +389,6 @@ AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAa
 
 .cell-profit-positive { color: #065F46; font-weight: 600; }
 .cell-profit-negative { color: #7F1D1D; font-weight: 600; }
-.cell-profit-zero { color: #6B7280; }
+.cell-profit-zero { color: var(--text-muted); }
 .summary-card--positive .summary-card__value { color: #059669; }
 .summary-card--negative .summary-card__value { color: #DC2626; }
-/* ==== V2 Redesign Overrides: Reports ==== */
-.rp-card{border:1px solid var(--line)!important;border-radius:16px!important;box-shadow:var(--shadow-sm)!important}
-.rp-filters{padding:14px!important;border:1px solid var(--line)!important;border-radius:14px!important;background:#fff;box-shadow:var(--shadow-sm)}
-.summary-card{border:1px solid var(--line)!important;border-radius:14px!important;background:linear-gradient(145deg,#fff,#f5fbfd)}
-.rp-card--table{padding:10px}
-.report-table{border:1px solid var(--line);border-radius:12px;overflow:hidden;border-collapse:separate;border-spacing:0}
-.report-table thead th{background:#eef6f9!important;color:#1f4d61!important;padding:12px 14px!important;border-bottom:1px solid var(--line)!important}
-.report-table tbody td{padding:12px 14px!important;border-bottom:1px solid #e7eff2!important}
-.report-table tbody tr:hover td{background:#f3fbfd!important}
-.rp-card__footer{padding:12px 14px!important;border-top:1px solid var(--line)!important;background:#f7fcfd!important}

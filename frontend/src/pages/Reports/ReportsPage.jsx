@@ -1,677 +1,439 @@
-﻿/**
- * ReportsPage.jsx Aaa Invory  |  MS-07 + MS-12 Frontend
- * Vista: Reportes de Inventario + ExportaciAAn
- *
- * Ruta:    /reportes
- * Roles:   Administrador y Empleado (operador solo lectura, sin exportar)
- * Tipos:   movements | sales | stock
- *
- * MS-07 (Juan Sebastian): generaciAAn de reportes con filtros y tabla.
- * MS-12 (Juan Camilo):    descarga de archivos PDF / Excel mediante
- *                         POST /api/export, solo para Administrador.
- */
-
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../../hooks/useAuth'
 import {
+  MOVEMENT_FILTER_OPTIONS,
+  REPORT_TYPES,
   getReport,
   getReportFiltersCatalog,
-  REPORT_TYPES,
-  REPORT_FILTERS,
-  MOVEMENT_FILTER_OPTIONS,
 } from '../../api/reports.js'
 import {
-  exportarDatos,
-  descargarBlob,
   buildExportPayload,
+  descargarBlob,
+  exportarDatos,
 } from '../../api/exports.js'
 import './reports.css'
 
-const PERIODOS = [
-  { value: 'custom', label: 'Personalizado' },
-  { value: 'today', label: 'Hoy' },
-  { value: 'week', label: 'Esta semana' },
-  { value: 'month', label: 'Este mes' },
-  { value: 'quarter', label: 'Trimestre actual' },
-  { value: 'semester', label: 'Semestre actual' },
-  { value: 'year', label: 'Este aAAo' },
-]
-
-function getPeriodDates(period) {
-  const now = new Date()
-  const pad = (n) => String(n).padStart(2, '0')
-  const fmt = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
-  const today = fmt(now)
-
-  switch (period) {
-    case 'today':
-      return { fecha_inicio: today, fecha_fin: today }
-    case 'week': {
-      const day = now.getDay() || 7
-      const monday = new Date(now)
-      monday.setDate(now.getDate() - day + 1)
-      return { fecha_inicio: fmt(monday), fecha_fin: today }
-    }
-    case 'month':
-      return { fecha_inicio: `${now.getFullYear()}-${pad(now.getMonth() + 1)}-01`, fecha_fin: today }
-    case 'quarter': {
-      const q = Math.floor(now.getMonth() / 3)
-      const qStart = new Date(now.getFullYear(), q * 3, 1)
-      return { fecha_inicio: fmt(qStart), fecha_fin: today }
-    }
-    case 'semester': {
-      const semStart = now.getMonth() < 6
-        ? new Date(now.getFullYear(), 0, 1)
-        : new Date(now.getFullYear(), 6, 1)
-      return { fecha_inicio: fmt(semStart), fecha_fin: today }
-    }
-    case 'year':
-      return { fecha_inicio: `${now.getFullYear()}-01-01`, fecha_fin: today }
-    default:
-      return null
-  }
+const DEFAULT_FILTERS = {
+  fecha_inicio: '',
+  fecha_fin: '',
+  categoria: '',
+  producto: '',
+  tipo: '',
+  fecha_desde: '',
+  fecha_hasta: '',
+  periodo_actual_desde: '',
+  periodo_actual_hasta: '',
+  periodo_anterior_desde: '',
+  periodo_anterior_hasta: '',
+  dias: 30,
 }
 
-/* AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA
-   AACONOS SVG
-AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA */
-const IconChart = () => (
-  <svg className="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
-    <line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/>
-  </svg>
-)
-const IconFilter = () => (
-  <svg className="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
-  </svg>
-)
-const IconClose = () => (
-  <svg className="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-  </svg>
-)
-const IconAlert = () => (
-  <svg className="inline-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
-    <line x1="12" y1="16" x2="12.01" y2="16"/>
-  </svg>
-)
-const IconSpinner = () => (
-  <svg className="spinner" viewBox="0 0 24 24" fill="none">
-    <circle cx="12" cy="12" r="10" strokeWidth="3" stroke="currentColor" strokeOpacity="0.2"/>
-    <path d="M12 2a10 10 0 0 1 10 10" strokeWidth="3" stroke="currentColor" strokeLinecap="round"/>
-  </svg>
-)
-const IconEmpty = () => (
-  <svg className="empty-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
-    <line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/>
-  </svg>
-)
-const IconDownload = () => (
-  <svg className="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-    <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-  </svg>
-)
-
-/* AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA
-   HOOK: TOASTS
-AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA */
-function useToast() {
-  const [toasts, setToasts] = useState([])
-  const timers = useRef({})
-  const add = useCallback((msg, type = 'info') => {
-    const id = Date.now() + Math.random()
-    setToasts(prev => [...prev, { id, msg, type }])
-    timers.current[id] = setTimeout(() => {
-      setToasts(prev => prev.filter(t => t.id !== id))
-      delete timers.current[id]
-    }, 3500)
-  }, [])
-  return { toasts, addToast: add }
+function toCurrency(value) {
+  return Number(value || 0).toLocaleString('es-CO', {
+    style: 'currency',
+    currency: 'COP',
+    maximumFractionDigits: 2,
+  })
 }
 
-function ToastContainer({ toasts }) {
-  if (!toasts.length) return null
-  return (
-    <div className="toast-container" aria-live="polite">
-      {toasts.map(t => (
-        <div key={t.id} className={`toast toast--${t.type}`}>
-          <span className={`toast-dot toast-dot--${t.type}`}/>
-          {t.msg}
-        </div>
-      ))}
-    </div>
-  )
+function toNumber(value) {
+  return Number(value || 0).toLocaleString('es-CO', {
+    maximumFractionDigits: 3,
+  })
 }
 
-/* AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA
-   TARJETAS DE RESUMEN
-AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA */
-function SummaryCards({ summary, reportType }) {
-  if (!summary) return null
-  const cards = reportType === 'sales'
-    ? [
-        { label: 'Ingresos totales', value: summary.total_value ?? 0, format: 'currency' },
-        { label: 'Costo total', value: summary.total_cost ?? 0, format: 'currency' },
+function buildTable(reportType, payload) {
+  if (!payload) return { columns: [], rows: [] }
+
+  if (reportType === 'profits') {
+    return {
+      columns: [
+        { key: 'total_ingresos', label: 'Total ingresos' },
+        { key: 'costo', label: 'Costo' },
+        { key: 'ganancia_bruta', label: 'Ganancia bruta' },
+        { key: 'margen_porcentual', label: 'Margen %' },
+      ],
+      rows: [
         {
-          label: 'Ganancia neta',
-          value: summary.total_profit ?? 0,
-          format: 'currency',
-          highlight: (summary.total_profit ?? 0) >= 0 ? 'positive' : 'negative',
+          total_ingresos: payload.total_ingresos,
+          costo: payload.costo,
+          ganancia_bruta: payload.ganancia_bruta,
+          margen_porcentual: `${Number(payload.margen_porcentual || 0).toFixed(2)}%`,
         },
-        { label: 'Margen de ganancia', value: summary.profit_margin ?? 0, format: 'percent' },
-      ]
-    : reportType === 'movements'
-      ? [
-          { label: 'Registros', value: summary.total_items ?? 0, format: 'number' },
-          { label: 'Cantidad total', value: summary.total_quantity ?? 0, format: 'number' },
-        ]
-    : [
-        { label: 'Registros', value: summary.total_items ?? 0, format: 'number' },
-        { label: 'Cantidad total', value: summary.total_quantity ?? 0, format: 'number' },
-        {
-          label: reportType === 'stock' ? 'Valor inventario' : 'Valor total',
-          value: summary.total_value ?? 0,
-          format: 'currency',
-        },
-      ]
-  return (
-    <div className="summary-cards">
-      {cards.map(card => (
-        <div key={card.label} className={`summary-card ${card.highlight ? `summary-card--${card.highlight}` : ''}`}>
-          <span className="summary-card__label">{card.label}</span>
-          <span className="summary-card__value">
-            {card.format === 'currency'
-              ? `$${Number(card.value).toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-              : card.format === 'percent'
-                ? `${Number(card.value).toLocaleString('es-CO', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`
-              : Number(card.value).toLocaleString('es-CO')}
-          </span>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-/* AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA
-   TABLA DE RESULTADOS
-AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA */
-function BadgeTipo({ tipo }) {
-  const label = tipo === 'entrada' ? 'Entrada' : tipo === 'salida' ? 'Salida' : tipo === 'ajuste' ? 'Ajuste' : tipo
-  return (
-    <span className={`badge-tipo badge-tipo--${tipo}`}>
-      <span className="badge-dot"/>
-      {label}
-    </span>
-  )
-}
-
-function ReportTable({ columns, items }) {
-  if (!columns || !items) return null
-  const toMoney = (value) => {
-    if (value == null || value === '') return null
-    if (typeof value === 'number') return value
-    const normalized = String(value).replace(/\s/g, '').replace(/\./g, '').replace(',', '.')
-    const parsed = Number(normalized)
-    return Number.isFinite(parsed) ? parsed : null
+      ],
+    }
   }
 
-  function renderCell(col, item) {
-    const val = item[col.key]
-    if (col.key === 'tipo') return <BadgeTipo tipo={val} />
-    if (col.key === 'ganancia') {
-      const amount = Number(val || 0)
-      const className = amount > 0 ? 'cell-profit-positive' : amount < 0 ? 'cell-profit-negative' : 'cell-profit-zero'
-      const prefix = amount > 0 ? '+$' : amount < 0 ? '-$' : '$'
-      return <span className={className}>{`${prefix}${Math.abs(amount).toLocaleString('es-CO', { minimumFractionDigits: 2 })}`}</span>
+  if (reportType === 'comparative') {
+    const indicadores = payload.indicadores || {}
+    return {
+      columns: [
+        { key: 'indicador', label: 'Indicador' },
+        { key: 'periodo_actual', label: 'Periodo actual' },
+        { key: 'periodo_anterior', label: 'Periodo anterior' },
+        { key: 'variacion_porcentual', label: 'Variacion %' },
+      ],
+      rows: Object.entries(indicadores).map(([key, value]) => ({
+        indicador: key.replaceAll('_', ' '),
+        periodo_actual: value?.periodo_actual,
+        periodo_anterior: value?.periodo_anterior,
+        variacion_porcentual: `${Number(value?.variacion_porcentual || 0).toFixed(2)}%`,
+      })),
     }
-    if (['valor_total', 'precio_unitario', 'costo_unitario', 'costo_total', 'monto_pagado', 'vuelto'].includes(col.key)) {
-      const amount = toMoney(val)
-      return amount != null
-        ? `$${amount.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-        : '-'
-    }
-    if (col.key === 'cantidad' || col.key === 'stock_anterior' || col.key === 'stock_posterior') {
-      return val != null ? Number(val).toLocaleString('es-CO') : 'Aaa'
-    }
-    return val ?? 'Aaa'
   }
 
-  return (
-    <div style={{ overflowX: 'auto' }}>
-      <table className="report-table">
-        <thead>
-          <tr>
-            {columns.map(col => (
-              <th key={col.key}>{col.label}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {items.length === 0 ? (
-            <tr>
-              <td colSpan={columns.length} className="table-empty">
-                <IconEmpty />
-                <span>No hay datos para los filtros seleccionados.</span>
-              </td>
-            </tr>
-          ) : (
-            items.map((item, idx) => (
-              <tr key={item.id_movimiento ?? item.id_producto ?? idx}>
-                {columns.map(col => (
-                  <td key={col.key} className={col.key === 'producto' ? 'td-bold' : ''}>
-                    {renderCell(col, item)}
-                  </td>
-                ))}
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
-    </div>
-  )
+  if (reportType === 'no-movement') {
+    return {
+      columns: [
+        { key: 'id_producto', label: 'ID producto' },
+        { key: 'nombre', label: 'Producto' },
+        { key: 'stock_actual', label: 'Stock actual' },
+        { key: 'ultima_fecha_movimiento', label: 'Ultimo movimiento' },
+      ],
+      rows: payload.items || [],
+    }
+  }
+
+  if (reportType === 'by-category') {
+    return {
+      columns: [
+        { key: 'nombre_categoria', label: 'Categoria' },
+        { key: 'cantidad_productos', label: 'Productos' },
+        { key: 'valor_total_inventario', label: 'Valor inventario' },
+        { key: 'cantidad_movimientos_ultimos_30_dias', label: 'Movimientos (30 dias)' },
+      ],
+      rows: payload.items || [],
+    }
+  }
+
+  return {
+    columns: payload.columns || [],
+    rows: payload.items || [],
+  }
 }
 
-/* AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA
-   COMPONENTE PRINCIPAL
-AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaA */
+function formatCell(key, value) {
+  if (value === null || value === undefined || value === '') return 'N/A'
+  if (
+    [
+      'valor_total',
+      'precio_unitario',
+      'costo_unitario',
+      'costo_total',
+      'monto_pagado',
+      'vuelto',
+      'costo',
+      'ganancia_bruta',
+      'total_ingresos',
+      'valor_total_inventario',
+    ].includes(key)
+  ) {
+    return toCurrency(value)
+  }
+  if (
+    [
+      'cantidad',
+      'stock_anterior',
+      'stock_posterior',
+      'stock_actual',
+      'cantidad_productos',
+      'cantidad_movimientos_ultimos_30_dias',
+      'periodo_actual',
+      'periodo_anterior',
+    ].includes(key)
+  ) {
+    return toNumber(value)
+  }
+  return String(value)
+}
+
 export default function ReportsPage() {
   const { user } = useAuth()
-  const isAdmin  = user?.rol === 'Administrador'
+  const isAdmin = user?.rol === 'Administrador'
 
-  const { toasts, addToast } = useToast()
-
-  // Tipo de reporte seleccionado
-  const [reportType, setReportType] = useState(REPORT_TYPES[0].value)
-
-  // CatAAlogo para filtros
   const [categories, setCategories] = useState([])
-  const [products, setProducts]     = useState([])
+  const [products, setProducts] = useState([])
   const [catalogLoading, setCatalogLoading] = useState(true)
 
-  // Filtros actuales
-  const [filters, setFilters] = useState({
-    fecha_inicio: '',
-    fecha_fin: '',
-    categoria: '',
-    producto: '',
-    tipo: '',
-  })
-  const [periodo, setPeriodo] = useState('custom')
+  const [reportType, setReportType] = useState('movements')
+  const [filters, setFilters] = useState(DEFAULT_FILTERS)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [result, setResult] = useState(null)
+  const [exporting, setExporting] = useState('')
 
-  // Resultado del reporte
-  const [reportData, setReportData] = useState(null)
-  const [loading, setLoading]       = useState(false)
-  const [generated, setGenerated]   = useState(false)
-  const [bannerMsg, setBannerMsg]   = useState(null)
+  const allowedTypes = useMemo(() => {
+    if (isAdmin) return REPORT_TYPES
+    // Empleado solo puede ver reportes operacionales, no financieros sensibles
+    return REPORT_TYPES.filter((t) => !['profits', 'comparative'].includes(t.value))
+  }, [isAdmin])
 
-  // Estado de exportaciAAn: null cuando idle, 'EXCEL' | 'PDF' cuando descargando
-  const [exportingFormat, setExportingFormat] = useState(null)
-  const [dropdownOpen, setDropdownOpen] = useState(false)
-  const dropdownRef = useRef(null)
+  const filteredProducts = useMemo(() => {
+    if (!filters.categoria) return products
+    return products.filter((product) => String(product.id_categoria) === String(filters.categoria))
+  }, [products, filters.categoria])
 
-  // Cargar catAAlogo al montar
+  const canExport = ['movements', 'sales', 'stock'].includes(reportType)
+
   useEffect(() => {
     async function loadCatalog() {
       setCatalogLoading(true)
       try {
-        const { categories: cats, products: prods } = await getReportFiltersCatalog()
-        setCategories(cats)
-        setProducts(prods)
-      } catch {
-        // fallo silencioso Aaa los selects quedan vacAAos
+        const catalog = await getReportFiltersCatalog()
+        setCategories(catalog.categories || [])
+        setProducts(catalog.products || [])
+      } catch (err) {
+        setCategories([])
+        setProducts([])
+        setError(err.message || 'No fue posible cargar el catalogo de filtros.')
       } finally {
         setCatalogLoading(false)
       }
     }
+
     loadCatalog()
   }, [])
 
-  function handleReportTypeChange(type) {
-    setReportType(type)
-    setReportData(null)
-    setGenerated(false)
-    setBannerMsg(null)
-    setFilters({ fecha_inicio: '', fecha_fin: '', categoria: '', producto: '', tipo: '' })
-    setPeriodo('custom')
-  }
+  useEffect(() => {
+    if (!allowedTypes.find((item) => item.value === reportType)) {
+      setReportType(allowedTypes[0]?.value || 'movements')
+    }
+  }, [allowedTypes, reportType])
 
-  function handleFilterChange(e) {
-    const { name, value } = e.target
-    setFilters(prev => ({
-      ...prev,
+  function onChangeFilter(event) {
+    const { name, value } = event.target
+    setFilters((state) => ({
+      ...state,
       [name]: value,
       ...(name === 'categoria' ? { producto: '' } : {}),
     }))
-    setBannerMsg(null)
   }
 
-  function handlePeriodoChange(e) {
-    const value = e.target.value
-    setPeriodo(value)
-    if (value === 'custom') return
-    const dates = getPeriodDates(value)
-    if (!dates) return
-    setFilters(prev => ({ ...prev, fecha_inicio: dates.fecha_inicio, fecha_fin: dates.fecha_fin }))
-    setBannerMsg(null)
+  function resetFilters() {
+    setFilters(DEFAULT_FILTERS)
+    setResult(null)
+    setError('')
   }
 
-  function handleClearFilters() {
-    setFilters({ fecha_inicio: '', fecha_fin: '', categoria: '', producto: '', tipo: '' })
-    setPeriodo('custom')
-    setReportData(null)
-    setGenerated(false)
-    setBannerMsg(null)
-  }
-
-  async function handleGenerate() {
-    setBannerMsg(null)
+  async function onGenerateReport() {
     setLoading(true)
+    setError('')
+    setResult(null)
+
     try {
-      const data = await getReport(reportType, filters)
-      setReportData(data)
-      setGenerated(true)
+      const payload = await getReport(reportType, filters)
+      setResult(payload)
     } catch (err) {
-      setBannerMsg(err.message ?? 'No fue posible generar el reporte.')
-      setReportData(null)
+      setError(err.message || 'No fue posible generar el reporte.')
     } finally {
       setLoading(false)
     }
   }
 
-  /* AaaAaa MS-12: ExportaciAAn al backend (solo Administrador) AaaAaaAaaAaaAaaAaaAaaAaaAaa */
-  async function handleExportFormat(formato) {
-    if (!reportData?.items?.length) {
-      addToast('No hay datos para exportar.', 'error')
-      return
-    }
-    setExportingFormat(formato)
+  async function onExport(formato) {
+    if (!canExport) return
+    setExporting(formato)
+    setError('')
     try {
       const payload = buildExportPayload({ reportType, filters, formato })
-      const { blob, filename, total } = await exportarDatos(payload)
-      descargarBlob(blob, filename)
-      addToast(
-        `Archivo ${formato} descargado AA ${total.toLocaleString('es-CO')} ${total === 1 ? 'registro' : 'registros'}.`,
-        'success'
-      )
+      const file = await exportarDatos(payload)
+      descargarBlob(file.blob, file.filename)
     } catch (err) {
-      if (err.code === 'EXPORT_DATA_NOT_FOUND' || err.status === 404) {
-        addToast('No se encontraron datos con los filtros seleccionados.', 'error')
-      } else if (err.code === 'EXPORT_LIMIT_EXCEEDED' || err.status === 413) {
-        addToast('El volumen supera el lAAmite (100.000 registros). Aplica filtros mAAs especAAficos.', 'error')
-      } else if (err.status === 403) {
-        addToast('No tienes permisos para exportar datos.', 'error')
-      } else {
-        addToast(err.message ?? 'No fue posible exportar los datos.', 'error')
-      }
+      setError(err.message || `No fue posible exportar el reporte en ${formato}.`)
     } finally {
-      setExportingFormat(null)
+      setExporting('')
     }
   }
 
-  const supportedFilters = REPORT_FILTERS[reportType] ?? []
-  const filteredProducts = filters.categoria
-    ? products.filter(p => String(p.id_categoria) === String(filters.categoria))
-    : products
-
-  const hayDatos = (reportData?.items?.length ?? 0) > 0
-  const showExportButtons = isAdmin && generated && hayDatos
-
-  useEffect(() => {
-    function onDown(e) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setDropdownOpen(false)
-    }
-    document.addEventListener('mousedown', onDown)
-    return () => document.removeEventListener('mousedown', onDown)
-  }, [])
+  const tableModel = useMemo(() => buildTable(reportType, result), [reportType, result])
 
   return (
     <div className="rp-page">
-
-      {/* Cabecera */}
       <div className="rp-page__header">
-        <div className="rp-page__heading">
-          <h2 className="rp-page__title">Reportes</h2>
-          <p className="rp-page__subtitle">Genera y exporta reportes de movimientos, ventas y stock</p>
+        <div>
+          <h2>Reportes</h2>
+          <p>Genera reportes de inventario y visualiza su resumen narrativo.</p>
         </div>
       </div>
 
-      <div className="rp-type-selector">
-        <span className="rp-type-label">Tipo de reporte:</span>
-        <div className="rp-type-dropdown" ref={dropdownRef}>
-          <button type="button" className="rp-type-trigger" onClick={() => setDropdownOpen(v => !v)}>
-            <span>{REPORT_TYPES.find(r => r.value === reportType)?.label}</span>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-              <polyline points={dropdownOpen ? '18 15 12 9 6 15' : '6 9 12 15 18 9'} />
-            </svg>
-          </button>
-          {dropdownOpen && (
-            <div className="rp-type-menu">
-              {REPORT_TYPES.map(rt => (
-                <button key={rt.value} type="button" className={`rp-type-option ${reportType === rt.value ? 'active' : ''}`} onClick={() => { handleReportTypeChange(rt.value); setDropdownOpen(false) }}>
-                  {rt.label}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Panel de filtros */}
       <div className="rp-card">
-        <div className="rp-card__header">
-          <span className="rp-card__title">Filtros</span>
-          <button type="button" className="btn btn--ghost btn--sm" onClick={handleClearFilters}>
-            <IconClose />
-            Limpiar
-          </button>
+        <div className="rp-type-selector">
+          <span className="rp-type-label">Tipo de reporte</span>
+          <select
+            className="filter-select"
+            value={reportType}
+            onChange={(event) => {
+              setReportType(event.target.value)
+              setResult(null)
+              setError('')
+            }}
+          >
+            {allowedTypes.map((type) => (
+              <option key={type.value} value={type.value}>{type.label}</option>
+            ))}
+          </select>
         </div>
 
         <div className="rp-filters">
-          {supportedFilters.includes('fecha_inicio') && (
-            <div className="filter-field">
-              <label className="filter-label">PerAAodo</label>
-              <select
-                className="filter-select"
-                value={periodo}
-                onChange={handlePeriodoChange}
-              >
-                {PERIODOS.map(period => (
-                  <option key={period.value} value={period.value}>{period.label}</option>
-                ))}
-              </select>
-            </div>
+          {['movements', 'sales'].includes(reportType) && (
+            <>
+              <div className="filter-field">
+                <label className="filter-label">Fecha inicio</label>
+                <input name="fecha_inicio" type="date" className="filter-input" value={filters.fecha_inicio} onChange={onChangeFilter} />
+              </div>
+              <div className="filter-field">
+                <label className="filter-label">Fecha fin</label>
+                <input name="fecha_fin" type="date" className="filter-input" value={filters.fecha_fin} onChange={onChangeFilter} />
+              </div>
+            </>
           )}
-          {supportedFilters.includes('fecha_inicio') && (
-            <div className="filter-field">
-              <label className="filter-label">Fecha inicio</label>
-              <input
-                type="date"
-                name="fecha_inicio"
-                className="filter-input"
-                value={filters.fecha_inicio}
-                onChange={handleFilterChange}
-                max={filters.fecha_fin || undefined}
-                disabled={periodo !== 'custom'}
-              />
-            </div>
+
+          {reportType === 'profits' && (
+            <>
+              <div className="filter-field">
+                <label className="filter-label">Fecha desde</label>
+                <input name="fecha_desde" type="date" className="filter-input" value={filters.fecha_desde} onChange={onChangeFilter} />
+              </div>
+              <div className="filter-field">
+                <label className="filter-label">Fecha hasta</label>
+                <input name="fecha_hasta" type="date" className="filter-input" value={filters.fecha_hasta} onChange={onChangeFilter} />
+              </div>
+            </>
           )}
-          {supportedFilters.includes('fecha_fin') && (
-            <div className="filter-field">
-              <label className="filter-label">Fecha fin</label>
-              <input
-                type="date"
-                name="fecha_fin"
-                className="filter-input"
-                value={filters.fecha_fin}
-                onChange={handleFilterChange}
-                min={filters.fecha_inicio || undefined}
-                disabled={periodo !== 'custom'}
-              />
-            </div>
+
+          {reportType === 'comparative' && (
+            <>
+              <div className="filter-field">
+                <label className="filter-label">Actual desde</label>
+                <input name="periodo_actual_desde" type="date" className="filter-input" value={filters.periodo_actual_desde} onChange={onChangeFilter} />
+              </div>
+              <div className="filter-field">
+                <label className="filter-label">Actual hasta</label>
+                <input name="periodo_actual_hasta" type="date" className="filter-input" value={filters.periodo_actual_hasta} onChange={onChangeFilter} />
+              </div>
+              <div className="filter-field">
+                <label className="filter-label">Anterior desde</label>
+                <input name="periodo_anterior_desde" type="date" className="filter-input" value={filters.periodo_anterior_desde} onChange={onChangeFilter} />
+              </div>
+              <div className="filter-field">
+                <label className="filter-label">Anterior hasta</label>
+                <input name="periodo_anterior_hasta" type="date" className="filter-input" value={filters.periodo_anterior_hasta} onChange={onChangeFilter} />
+              </div>
+            </>
           )}
-          {supportedFilters.includes('categoria') && (
-            <div className="filter-field">
-              <label className="filter-label">CategorAAa</label>
-              <select
-                name="categoria"
-                className="filter-select"
-                value={filters.categoria}
-                onChange={handleFilterChange}
-                disabled={catalogLoading}
-              >
-                <option value="">Todas</option>
-                {categories.map(c => (
-                  <option key={`category-${c.id_categoria ?? c.nombre_categoria}`} value={c.id_categoria}>
-                    {c.nombre_categoria}
-                  </option>
-                ))}
-              </select>
-            </div>
+
+          {['movements', 'sales', 'stock'].includes(reportType) && (
+            <>
+              <div className="filter-field">
+                <label className="filter-label">Categoria</label>
+                <select name="categoria" className="filter-select" value={filters.categoria} onChange={onChangeFilter} disabled={catalogLoading}>
+                  <option value="">Todas</option>
+                  {categories.map((category) => (
+                    <option key={category.id_categoria} value={category.id_categoria}>{category.nombre_categoria}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="filter-field">
+                <label className="filter-label">Producto</label>
+                <select name="producto" className="filter-select" value={filters.producto} onChange={onChangeFilter} disabled={catalogLoading}>
+                  <option value="">Todos</option>
+                  {filteredProducts.map((product) => (
+                    <option key={product.id_producto} value={product.id_producto}>{product.nombre}</option>
+                  ))}
+                </select>
+              </div>
+            </>
           )}
-          {supportedFilters.includes('producto') && (
-            <div className="filter-field">
-              <label className="filter-label">Producto</label>
-              <select
-                name="producto"
-                className="filter-select"
-                value={filters.producto}
-                onChange={handleFilterChange}
-                disabled={catalogLoading}
-              >
-                <option value="">Todos</option>
-                {filteredProducts.map(p => (
-                  <option key={`product-${p.id_producto ?? p.nombre}`} value={p.id_producto}>
-                    {p.nombre}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-          {supportedFilters.includes('tipo') && (
+
+          {reportType === 'movements' && (
             <div className="filter-field">
               <label className="filter-label">Tipo movimiento</label>
-              <select
-                name="tipo"
-                className="filter-select"
-                value={filters.tipo}
-                onChange={handleFilterChange}
-              >
+              <select name="tipo" className="filter-select" value={filters.tipo} onChange={onChangeFilter}>
                 <option value="">Todos</option>
-                {MOVEMENT_FILTER_OPTIONS.map(opt => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                {MOVEMENT_FILTER_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
                 ))}
               </select>
+            </div>
+          )}
+
+          {reportType === 'no-movement' && (
+            <div className="filter-field">
+              <label className="filter-label">Dias</label>
+              <input name="dias" type="number" min="1" className="filter-input" value={filters.dias} onChange={onChangeFilter} />
             </div>
           )}
         </div>
 
         <div className="rp-card__footer">
-          <button
-            type="button"
-            className="btn btn--primary"
-            onClick={handleGenerate}
-            disabled={loading}
-          >
-            {loading ? <><IconSpinner /> GenerandoAaA</> : <><IconFilter /> Generar reporte</>}
+          <button type="button" className="btn btn--ghost" onClick={resetFilters}>Limpiar</button>
+          <button type="button" className="btn btn--primary" onClick={onGenerateReport} disabled={loading}>
+            {loading ? 'Generando...' : 'Generar reporte'}
           </button>
 
-          {/* MS-12: botones de descarga (solo Administrador) */}
-          {showExportButtons && (
+          {isAdmin && canExport && (
             <div className="rp-export-group">
               <span className="rp-export-label">Exportar:</span>
-              <button
-                type="button"
-                className="btn btn--outline btn--sm"
-                onClick={() => handleExportFormat('EXCEL')}
-                disabled={exportingFormat !== null}
-                title="Descargar como Excel"
-              >
-                {exportingFormat === 'EXCEL' ? <IconSpinner /> : <IconDownload />}
-                Excel
+              <button type="button" className="btn btn--outline" onClick={() => onExport('PDF')} disabled={Boolean(exporting)}>
+                {exporting === 'PDF' ? 'Exportando PDF...' : 'PDF'}
               </button>
-              <button
-                type="button"
-                className="btn btn--outline btn--sm"
-                onClick={() => handleExportFormat('PDF')}
-                disabled={exportingFormat !== null}
-                title="Descargar como PDF"
-              >
-                {exportingFormat === 'PDF' ? <IconSpinner /> : <IconDownload />}
-                PDF
+              <button type="button" className="btn btn--outline" onClick={() => onExport('EXCEL')} disabled={Boolean(exporting)}>
+                {exporting === 'EXCEL' ? 'Exportando Excel...' : 'Excel'}
               </button>
             </div>
           )}
         </div>
       </div>
 
-      {/* Banner error */}
-      {bannerMsg && (
-        <div className="alert-banner alert-banner--error" role="alert">
-          <IconAlert />
-          <span>{bannerMsg}</span>
-          <button
-            className="alert-banner__close"
-            onClick={() => setBannerMsg(null)}
-            type="button"
-            aria-label="Cerrar"
-          >
-            <IconClose />
-          </button>
-        </div>
-      )}
+      {error && <div className="alert-banner alert-banner--error">{error}</div>}
 
-      {/* Resultados */}
-      {loading && (
-        <div className="rp-loading">
-          <IconSpinner />
-          <span>Generando reporteAaA</span>
-        </div>
-      )}
-
-      {!loading && generated && reportData && (
-        <>
-          <SummaryCards summary={reportData.summary} reportType={reportType} />
-
-          <div className="rp-card rp-card--table">
-            <div className="rp-card__header">
-              <span className="rp-card__title">
-                {REPORT_TYPES.find(r => r.value === reportType)?.label}
-              </span>
-              <span className="rp-table-count">
-                {reportData.items?.length ?? 0}{' '}
-                {reportData.items?.length === 1 ? 'registro' : 'registros'}
-              </span>
-            </div>
-            <ReportTable
-              columns={reportData.columns}
-              items={reportData.items}
-            />
-            {reportData.meta?.generatedAt && (
-              <div className="rp-card__info">
-                Generado el{' '}
-                {new Date(reportData.meta.generatedAt).toLocaleString('es-CO', {
-                  dateStyle: 'medium',
-                  timeStyle: 'short',
-                })}
-              </div>
-            )}
+      {!loading && result?.resumen_narrativo && (
+        <div className="rp-card narrative-box">
+          <div className="rp-card__header">
+            <span className="rp-card__title">Resumen narrativo</span>
           </div>
-        </>
-      )}
-
-      {!loading && !generated && (
-        <div className="rp-empty-state">
-          <IconEmpty />
-          <p>Selecciona los filtros y presiona <strong>Generar reporte</strong> para ver los resultados.</p>
+          <div className="rp-card__info narrative-content">{result.resumen_narrativo}</div>
         </div>
       )}
 
-      <ToastContainer toasts={toasts} />
+      {loading && <div className="rp-loading">Generando reporte...</div>}
+
+      {!loading && result && (
+        <div className="rp-card rp-card--table">
+          <div className="rp-card__header">
+            <span className="rp-card__title">Resultados</span>
+            <span className="rp-table-count">{tableModel.rows.length} registros</span>
+          </div>
+
+          <div style={{ overflowX: 'auto' }}>
+            <table className="report-table">
+              <thead>
+                <tr>
+                  {tableModel.columns.map((column) => (
+                    <th key={column.key}>{column.label}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {tableModel.rows.length === 0 && (
+                  <tr>
+                    <td colSpan={tableModel.columns.length || 1} className="table-empty">No hay datos para el periodo seleccionado.</td>
+                  </tr>
+                )}
+
+                {tableModel.rows.map((row, index) => (
+                  <tr key={`row-${index}`}>
+                    {tableModel.columns.map((column) => (
+                      <td key={`${column.key}-${index}`}>{formatCell(column.key, row[column.key])}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
-

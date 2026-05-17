@@ -4,39 +4,44 @@
 
 
 :root {
-  --cat-primary:        #2563EB;
-  --cat-primary-dark:   #1D4ED8;
-  --cat-primary-light:  #EFF6FF;
-  --cat-primary-ring:   rgba(37, 99, 235, 0.18);
+  --cat-primary:        var(--accent);
+  --cat-primary-dark:   var(--accent-hover);
+  --cat-primary-light:  var(--bg-surface-elevated);
+  --cat-primary-ring:   rgba(88, 129, 87, 0.15);
 
-  --cat-secondary:      #10B981;
-  --cat-success-bg:     #ECFDF5;
-  --cat-success-border: #6EE7B7;
-  --cat-success-text:   #065F46;
+  --cat-secondary:      var(--success-green);
+  --cat-success-bg:     var(--bg-surface-elevated);
+  --cat-success-border: var(--success-green);
+  --cat-success-text:   var(--success-green);
 
-  --cat-danger:         #EF4444;
-  --cat-danger-light:   #FEF2F2;
-  --cat-danger-border:  #FCA5A5;
-  --cat-danger-text:    #7F1D1D;
-  --cat-danger-dark:    #DC2626;
+  --cat-danger:         var(--danger-red);
+  --cat-danger-light:   var(--bg-surface-elevated);
+  --cat-danger-border:  var(--danger-red);
+  --cat-danger-text:    var(--danger-red);
+  --cat-danger-dark:    var(--danger-red);
 
-  --cat-bg:             #F3F4F6;
-  --cat-surface:        #FFFFFF;
-  --cat-surface-2:      #F9FAFB;
-  --cat-border:         #E5E7EB;
-  --cat-border-strong:  #D1D5DB;
+  --cat-warn:           var(--warning-orange);
+  --cat-warn-light:     var(--bg-surface-elevated);
+  --cat-warn-border:    var(--warning-orange);
+  --cat-warn-text:      var(--warning-orange);
 
-  --cat-text:           #111827;
-  --cat-text-muted:     #6B7280;
-  --cat-text-soft:      #9CA3AF;
+  --cat-bg:             var(--bg);
+  --cat-surface:        var(--panel-bg);
+  --cat-surface-2:      var(--bg-surface-elevated);
+  --cat-border:         var(--border);
+  --cat-border-strong:  var(--border);
+
+  --cat-text:           var(--text-h);
+  --cat-text-muted:     var(--text);
+  --cat-text-soft:      var(--text-muted);
 
   --cat-radius:         10px;
   --cat-radius-sm:      6px;
-  --cat-shadow:         0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.05);
-  --cat-shadow-lg:      0 10px 40px rgba(0,0,0,.14);
+  --cat-shadow:         var(--shadow-sm);
+  --cat-shadow-lg:      var(--shadow-md);
 
-  --font-main:  'Inter', system-ui, sans-serif;
-  --font-mono:  'JetBrains Mono', monospace;
+  --font-main:  var(--sans);
+  --font-mono:  var(--sans);
 }
 
 

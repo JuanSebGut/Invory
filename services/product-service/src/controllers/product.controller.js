@@ -33,6 +33,25 @@ class ProductController {
     }
   };
 
+  listUnits = async (_req, res, next) => {
+    try {
+      const result = await this.productService.listUnits();
+      sendSuccess(res, 200, result);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  getUnitById = async (req, res, next) => {
+    try {
+      const idUnidad = parseProductId(req.params.id);
+      const result = await this.productService.getUnitById(idUnidad);
+      sendSuccess(res, 200, result);
+    } catch (error) {
+      next(error);
+    }
+  };
+
   getProductById = async (req, res, next) => {
     try {
       const idProducto = parseProductId(req.params.id);

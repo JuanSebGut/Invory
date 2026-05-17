@@ -87,7 +87,12 @@ function createApp(options = {}) {
   try {
     const nowProvider = options.nowProvider
       || (typeof options.now === 'string' ? () => options.now : undefined);
-    alertsService = createInventoryService({ repository, nowProvider });
+    alertsService = createInventoryService({
+      repository,
+      nowProvider,
+      fetchImpl,
+      clientServiceUrl: config.clientServiceUrl,
+    });
   } catch (_error) {
     alertsService = null;
   }

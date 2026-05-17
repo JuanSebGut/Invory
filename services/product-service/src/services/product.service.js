@@ -40,6 +40,18 @@ function formatProduct(product) {
     nombre: product.nombre,
     categoria: product.nombre_categoria || product.categoria || null,
     id_categoria: product.id_categoria,
+    id_unidad:
+      product.id_unidad === null || typeof product.id_unidad === 'undefined'
+        ? null
+        : Number(product.id_unidad),
+    permite_fraccion: Boolean(product.permite_fraccion),
+    unidad:
+      product.unidad_nombre || product.unidad_abreviatura
+        ? {
+            nombre: product.unidad_nombre || null,
+            abreviatura: product.unidad_abreviatura || null,
+          }
+        : null,
     precio_compra: Number(product.precio_compra),
     precio_venta: Number(product.precio_venta),
     stock_actual: Number(product.stock_actual || 0),
@@ -76,6 +88,17 @@ class ProductService {
     }
   }
 
+  async validateUnit(idUnidad) {
+    if (typeof idUnidad !== 'number') {
+      return;
+    }
+
+    const unit = await this.repository.getUnitById(idUnidad);
+    if (!unit) {
+      throw createHttpError(404, 'UNIT_NOT_FOUND', 'Unidad de medida no encontrada');
+    }
+  }
+
   async createProduct(payload) {
     const existing = await this.repository.getProductByBarcode(payload.codigo_barras);
     if (existing) {
@@ -83,6 +106,7 @@ class ProductService {
     }
 
     await this.validateCategory(payload.id_categoria);
+    await this.validateUnit(payload.id_unidad);
 
     const created = await this.repository.createProduct(payload);
     const createdFull = await this.repository.getProductById(created.id_producto, {
@@ -121,6 +145,18 @@ class ProductService {
         codigo_barras: item.codigo_barras_unico || item.codigo_barras,
         nombre: item.nombre,
         categoria: item.nombre_categoria || item.categoria || null,
+        unidad:
+          item.unidad_nombre || item.unidad_abreviatura
+            ? {
+                nombre: item.unidad_nombre || null,
+                abreviatura: item.unidad_abreviatura || null,
+              }
+            : null,
+        id_unidad:
+          item.id_unidad === null || typeof item.id_unidad === 'undefined'
+            ? null
+            : Number(item.id_unidad),
+        permite_fraccion: Boolean(item.permite_fraccion),
         precio_venta: Number(item.precio_venta),
         stock_actual: Number(item.stock_actual || 0),
       })),
@@ -135,6 +171,10 @@ class ProductService {
 
     if (typeof patch.id_categoria === 'number') {
       await this.validateCategory(patch.id_categoria);
+    }
+
+    if (typeof patch.id_unidad === 'number') {
+      await this.validateUnit(patch.id_unidad);
     }
 
     await this.repository.updateProductPartial(idProducto, patch);
@@ -158,6 +198,40 @@ class ProductService {
     return {
       data: formatProduct(deleted),
       warning: buildPriceWarning(deleted),
+    };
+  }
+
+  async listUnits() {
+    const items = await this.repository.listUnits();
+    return {
+      unidades: items.map((item) => ({
+        id_unidad: Number(item.id_unidad),
+        nombre: item.nombre,
+        abreviatura: item.abreviatura,
+        tipo: item.tipo,
+        factor_base:
+          item.factor_base === null || typeof item.factor_base === 'undefined'
+            ? null
+            : Number(item.factor_base),
+      })),
+    };
+  }
+
+  async getUnitById(idUnidad) {
+    const unit = await this.repository.getUnitById(idUnidad);
+    if (!unit) {
+      throw createHttpError(404, 'UNIT_NOT_FOUND', 'Unidad de medida no encontrada');
+    }
+
+    return {
+      id_unidad: Number(unit.id_unidad),
+      nombre: unit.nombre,
+      abreviatura: unit.abreviatura,
+      tipo: unit.tipo,
+      factor_base:
+        unit.factor_base === null || typeof unit.factor_base === 'undefined'
+          ? null
+          : Number(unit.factor_base),
     };
   }
 }

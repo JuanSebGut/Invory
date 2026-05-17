@@ -8,39 +8,44 @@ AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAa
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
-  --prov-primary:        #2563EB;
-  --prov-primary-dark:   #1D4ED8;
-  --prov-primary-light:  #EFF6FF;
-  --prov-primary-ring:   rgba(37, 99, 235, 0.18);
+  --prov-primary:        var(--accent);
+  --prov-primary-dark:   var(--accent-hover);
+  --prov-primary-light:  var(--bg-surface-elevated);
+  --prov-primary-ring:   rgba(88, 129, 87, 0.15);
 
-  --prov-secondary:      #10B981;
-  --prov-success-bg:     #ECFDF5;
-  --prov-success-border: #6EE7B7;
-  --prov-success-text:   #065F46;
+  --prov-secondary:      var(--success-green);
+  --prov-success-bg:     var(--bg-surface-elevated);
+  --prov-success-border: var(--success-green);
+  --prov-success-text:   var(--success-green);
 
-  --prov-danger:         #EF4444;
-  --prov-danger-light:   #FEF2F2;
-  --prov-danger-border:  #FCA5A5;
-  --prov-danger-text:    #7F1D1D;
-  --prov-danger-dark:    #DC2626;
+  --prov-danger:         var(--danger-red);
+  --prov-danger-light:   var(--bg-surface-elevated);
+  --prov-danger-border:  var(--danger-red);
+  --prov-danger-text:    var(--danger-red);
+  --prov-danger-dark:    var(--danger-red);
 
-  --prov-bg:             #F3F4F6;
-  --prov-surface:        #FFFFFF;
-  --prov-surface-2:      #F9FAFB;
-  --prov-border:         #E5E7EB;
-  --prov-border-strong:  #D1D5DB;
+  --prov-warn:           var(--warning-orange);
+  --prov-warn-light:     var(--bg-surface-elevated);
+  --prov-warn-border:    var(--warning-orange);
+  --prov-warn-text:      var(--warning-orange);
 
-  --prov-text:           #111827;
-  --prov-text-muted:     #6B7280;
-  --prov-text-soft:      #9CA3AF;
+  --prov-bg:             var(--bg);
+  --prov-surface:        var(--panel-bg);
+  --prov-surface-2:      var(--bg-surface-elevated);
+  --prov-border:         var(--border);
+  --prov-border-strong:  var(--border);
+
+  --prov-text:           var(--text-h);
+  --prov-text-muted:     var(--text);
+  --prov-text-soft:      var(--text-muted);
 
   --prov-radius:         10px;
   --prov-radius-sm:      6px;
-  --prov-shadow:         0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.05);
-  --prov-shadow-lg:      0 10px 40px rgba(0,0,0,.14);
+  --prov-shadow:         var(--shadow-sm);
+  --prov-shadow-lg:      var(--shadow-md);
 
-  --font-main:  'Inter', system-ui, sans-serif;
-  --font-mono:  'JetBrains Mono', monospace;
+  --font-main:  var(--sans);
+  --font-mono:  var(--sans);
 }
 
 /* AaaAaa PAAgina AaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaa */
@@ -626,8 +631,8 @@ td.table-empty {
 .confirm-modal__warning {
   font-family:   var(--font-main);
   font-size:     12px;
-  color:         #92400E;
-  background:    #FFFBEB;
+  color: var(--text-muted);
+  background: var(--bg);
   border:        1px solid #FCD34D;
   border-radius: var(--prov-radius-sm);
   padding:       8px 12px;
@@ -742,13 +747,4 @@ td.table-empty {
   .form-grid { grid-template-columns: 1fr; }
   .filter-row { flex-direction: column; align-items: stretch; }
   .search-wrap { max-width: 100%; }
-}/* ==== V2 Redesign Overrides: Providers ==== */
-.prov-page__header{padding:18px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(145deg,#fff,#f4fbfd);box-shadow:var(--shadow-sm)}
-.filter-row{padding:14px;border:1px solid var(--line);border-radius:14px;background:#fff;box-shadow:var(--shadow-sm)}
-.table-card{border:1px solid var(--line)!important;border-radius:16px!important;box-shadow:var(--shadow-sm)!important}
-.table-wrapper{padding:10px}
-.prov-table{border:1px solid var(--line);border-radius:12px;overflow:hidden;border-collapse:separate;border-spacing:0}
-.prov-table thead th{background:#eef6f9!important;color:#1f4d61!important;padding:12px 14px!important;border-bottom:1px solid var(--line)!important}
-.prov-table tbody td{padding:12px 14px!important;border-bottom:1px solid #e7eff2!important}
-.prov-table tbody tr:hover td{background:#f3fbfd!important}
-.pagination{padding:12px 14px!important;border-top:1px solid var(--line)!important;background:#f7fcfd!important}
+}

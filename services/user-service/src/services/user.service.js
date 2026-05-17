@@ -27,6 +27,7 @@ class UserService {
       notifyUserCreated: async () => {},
       notifyUserUpdated: async () => {},
       notifyUserDisabled: async () => {},
+      notifyPasswordReset: async () => {},
     },
     bcryptSaltRounds = 10,
   }) {
@@ -168,6 +169,38 @@ class UserService {
       .catch(() => {});
 
     return safeUpdated;
+  }
+
+  async resetPassword(idUsuario, payload, actorContext = {}) {
+    if (!isAdminRole(actorContext.role)) {
+      throw createHttpError(
+        403,
+        'RESET_PASSWORD_FORBIDDEN',
+        'Solo un Administrador puede restablecer contrasenas'
+      );
+    }
+
+    const actorUserId = Number(actorContext.userId);
+    if (!Number.isInteger(actorUserId) || actorUserId <= 0) {
+      throw createHttpError(400, 'VALIDATION_ERROR', 'Header x-user-id invalido');
+    }
+
+    const current = await this.repository.getUserById(idUsuario);
+    if (!current) {
+      throw createHttpError(404, 'USER_NOT_FOUND', 'Usuario no encontrado');
+    }
+
+    const contrasenaHash = await bcrypt.hash(payload.nueva_contrasena, this.bcryptSaltRounds);
+    await this.repository.resetPassword(idUsuario, contrasenaHash);
+
+    void this.auditNotifier
+      .notifyPasswordReset({
+        actorContext,
+        targetUserId: idUsuario,
+      })
+      .catch(() => {});
+
+    return { message: 'Contraseña actualizada correctamente' };
   }
 }
 

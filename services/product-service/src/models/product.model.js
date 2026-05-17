@@ -52,6 +52,14 @@ function normalizePositiveInteger(value, fieldName) {
   return normalized;
 }
 
+function normalizeOptionalPositiveInteger(value, fieldName) {
+  if (typeof value === 'undefined' || value === null || value === '') {
+    return undefined;
+  }
+
+  return normalizePositiveInteger(value, fieldName);
+}
+
 function normalizePageNumber(value, fallback) {
   const normalized = Number(value);
   return Number.isInteger(normalized) && normalized > 0 ? normalized : fallback;
@@ -144,6 +152,11 @@ function validateCreateProductPayload(body) {
     typeof readAlias(body, ['estado']) === 'undefined'
       ? true
       : toBooleanEstado(readAlias(body, ['estado']));
+  const id_unidad = normalizeOptionalPositiveInteger(readAlias(body, ['id_unidad']), 'id_unidad');
+  const permite_fraccion =
+    typeof readAlias(body, ['permite_fraccion']) === 'undefined'
+      ? false
+      : toBooleanEstado(readAlias(body, ['permite_fraccion']));
 
   if (typeof stock_maximo === 'number' && stock_maximo < stock_minimo) {
     throw createHttpError(
@@ -165,6 +178,8 @@ function validateCreateProductPayload(body) {
     fecha_vencimiento: normalizeOptionalDate(body.fecha_vencimiento, 'fecha_vencimiento'),
     descripcion: normalizeTrimmedString(body.descripcion) || null,
     estado,
+    id_unidad: id_unidad ?? null,
+    permite_fraccion,
   };
 }
 
@@ -264,6 +279,18 @@ function validateUpdateProductPayload(body) {
 
   if (Object.prototype.hasOwnProperty.call(body, 'descripcion')) {
     patch.descripcion = normalizeTrimmedString(body.descripcion) || null;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(body, 'id_unidad')) {
+    if (body.id_unidad === null || body.id_unidad === '') {
+      patch.id_unidad = null;
+    } else {
+      patch.id_unidad = normalizePositiveInteger(body.id_unidad, 'id_unidad');
+    }
+  }
+
+  if (Object.prototype.hasOwnProperty.call(body, 'permite_fraccion')) {
+    patch.permite_fraccion = toBooleanEstado(body.permite_fraccion);
   }
 
   if (

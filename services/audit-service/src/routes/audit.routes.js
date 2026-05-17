@@ -20,6 +20,7 @@ function createAuditRoutes({ controller, authMiddleware }) {
 
   router.post('/events', controller.registerEvent);
   router.get('/logs', authMiddleware, requireAdmin, controller.listLogs);
+  router.get('/logs/movements', authMiddleware, requireAdmin, controller.listMovementLogs);
 
   return router;
 }

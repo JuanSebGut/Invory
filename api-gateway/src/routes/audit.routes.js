@@ -20,7 +20,7 @@ function requireAdmin(req, res, next) {
       success: false,
       error: {
         code: 'AUTH_FORBIDDEN',
-        message: 'No tiene permisos para esta operacion',
+        message: 'Solo el Administrador puede acceder a los logs de auditoria',
       },
     });
   }

@@ -1,5 +1,6 @@
 const {
   validateCreateUserPayload,
+  validateResetPasswordPayload,
   validateUpdateUserPayload,
   parseListQuery,
   parseUserId,
@@ -50,6 +51,19 @@ class UserController {
 
       const updated = await this.userService.updateUser(idUsuario, patch, actorContext);
       res.status(200).json({ success: true, data: updated });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  resetPassword = async (req, res, next) => {
+    try {
+      const idUsuario = parseUserId(req.params.id);
+      const payload = validateResetPasswordPayload(req.body);
+      const actorContext = extractActorContext(req.headers);
+
+      const result = await this.userService.resetPassword(idUsuario, payload, actorContext);
+      res.status(200).json({ success: true, message: result.message });
     } catch (error) {
       next(error);
     }

@@ -9,44 +9,44 @@ AaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAaAAa
 
 /* AaaAaa Variables AaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaa */
 :root {
-  --prod-primary:        #2563EB;
-  --prod-primary-dark:   #1D4ED8;
-  --prod-primary-light:  #EFF6FF;
-  --prod-primary-ring:   rgba(37, 99, 235, 0.18);
+  --prod-primary:        var(--accent);
+  --prod-primary-dark:   var(--accent-hover);
+  --prod-primary-light:  var(--bg-surface-elevated);
+  --prod-primary-ring:   rgba(88, 129, 87, 0.15);
 
-  --prod-secondary:      #10B981;
-  --prod-success-bg:     #ECFDF5;
-  --prod-success-border: #6EE7B7;
-  --prod-success-text:   #065F46;
+  --prod-secondary:      var(--success-green);
+  --prod-success-bg:     var(--bg-surface-elevated);
+  --prod-success-border: var(--success-green);
+  --prod-success-text:   var(--success-green);
 
-  --prod-danger:         #EF4444;
-  --prod-danger-light:   #FEF2F2;
-  --prod-danger-border:  #FCA5A5;
-  --prod-danger-text:    #7F1D1D;
-  --prod-danger-dark:    #DC2626;
+  --prod-danger:         var(--danger-red);
+  --prod-danger-light:   var(--bg-surface-elevated);
+  --prod-danger-border:  var(--danger-red);
+  --prod-danger-text:    var(--danger-red);
+  --prod-danger-dark:    var(--danger-red);
 
-  --prod-warn:           #F59E0B;
-  --prod-warn-light:     #FFFBEB;
-  --prod-warn-border:    #FCD34D;
-  --prod-warn-text:      #92400E;
+  --prod-warn:           var(--warning-orange);
+  --prod-warn-light:     var(--bg-surface-elevated);
+  --prod-warn-border:    var(--warning-orange);
+  --prod-warn-text:      var(--warning-orange);
 
-  --prod-bg:             #F3F4F6;
-  --prod-surface:        #FFFFFF;
-  --prod-surface-2:      #F9FAFB;
-  --prod-border:         #E5E7EB;
-  --prod-border-strong:  #D1D5DB;
+  --prod-bg:             var(--bg);
+  --prod-surface:        var(--panel-bg);
+  --prod-surface-2:      var(--bg-surface-elevated);
+  --prod-border:         var(--border);
+  --prod-border-strong:  var(--border);
 
-  --prod-text:           #111827;
-  --prod-text-muted:     #6B7280;
-  --prod-text-soft:      #9CA3AF;
+  --prod-text:           var(--text-h);
+  --prod-text-muted:     var(--text);
+  --prod-text-soft:      var(--text-muted);
 
   --prod-radius:         10px;
   --prod-radius-sm:      6px;
-  --prod-shadow:         0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.05);
-  --prod-shadow-lg:      0 10px 40px rgba(0,0,0,.14);
+  --prod-shadow:         var(--shadow-sm);
+  --prod-shadow-lg:      var(--shadow-md);
 
-  --font-main:  'Inter', system-ui, sans-serif;
-  --font-mono:  'JetBrains Mono', monospace;
+  --font-main:  var(--sans);
+  --font-mono:  var(--sans);
 }
 
 /* AaaAaa PAAgina AaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaa */
@@ -868,45 +868,3 @@ td.table-empty {
 .prod-detail-mono {
   font-family: var(--font-mono);
 }
-/* ==== V2 Redesign Overrides: Products ==== */
-.prod-page__header,.u-page-header,.prov-page__header,.inv-page__header,.audit-page__header,.al-page__header{
-  padding:18px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(145deg,#fff,#f4fbfd);box-shadow:var(--shadow-sm);
-}
-.filter-row,.u-toolbar,.audit-toolbar,.hist-toolbar,.rp-filters,.al-filters{
-  padding:14px;border:1px solid var(--line);border-radius:14px;background:#fff;box-shadow:var(--shadow-sm);
-}
-.table-card,.u-table-card,.audit-card,.al-table-card,.history-page__table-wrap,.inv-card,.rp-card{
-  border:1px solid var(--line)!important;border-radius:16px!important;box-shadow:var(--shadow-sm)!important;background:#fff;
-}
-.table-wrapper,.audit-table-wrap{padding:10px}
-.prod-table,.u-table,.prov-table,.inv-table,.audit-table,.report-table{
-  border:1px solid var(--line);border-radius:12px;overflow:hidden;border-collapse:separate;border-spacing:0;background:#fff;
-}
-.prod-table thead th,.u-table thead th,.prov-table thead th,.inv-table thead th,.audit-table thead th,.report-table thead th{
-  background:#eef6f9!important;color:#1f4d61!important;padding:12px 14px!important;border-bottom:1px solid var(--line)!important;
-}
-.prod-table tbody td,.u-table tbody td,.prov-table tbody td,.inv-table tbody td,.audit-table tbody td,.report-table tbody td{
-  padding:12px 14px!important;border-bottom:1px solid #e7eff2!important;
-}
-.prod-table tbody tr:hover td,.u-table tbody tr:hover td,.prov-table tbody tr:hover td,.inv-table tbody tr:hover td,.audit-table tbody tr:hover td,.report-table tbody tr:hover td{
-  background:#f3fbfd!important;
-}
-.pagination,.u-pagination{padding:12px 14px!important;border-top:1px solid var(--line)!important;background:#f7fcfd!important}
-.btn--primary,.u-btn--primary,.btn-login{background:linear-gradient(135deg,var(--brand),var(--brand-strong))!important;border-color:var(--brand-strong)!important}
-.btn--danger,.u-btn--danger,.btn--danger-solid{background:linear-gradient(135deg,#ea6262,#c94040)!important;color:#fff!important;border-color:#b83838!important}
-.btn--ghost,.u-btn--ghost,.btn--outline{border-color:var(--line-strong)!important;color:#214553!important}
-/* ==== Pixel Polish Module Pages ==== */
-.prod-page,.prov-page,.inv-page,.audit-page,.rp-page,.u-page,.history-page { gap: 14px; }
-.prod-page__title,.prov-page__title,.inv-page__title,.audit-page__title,.u-page-title,.history-page__header h2 { font-size: 24px; }
-
-.prod-table tbody td,.prov-table tbody td,.u-table tbody td,.inv-table tbody td,.audit-table tbody td,.report-table tbody td { font-size: 12.8px !important; }
-
-.prod-table thead th,.prov-table thead th,.u-table thead th,.inv-table thead th,.audit-table thead th,.report-table thead th { font-size: 10.8px !important; }
-
-.pagination,.u-pagination { padding: 10px 12px !important; }
-
-.btn,.u-btn,.page-btn,.btn-page,.u-btn-page { border-radius: 9px !important; }
-
-.modal,.u-modal { border-radius: 16px !important; }
-.modal__header,.u-modal__header { padding: 16px 18px !important; }
-.modal__body,.u-modal__body { padding: 18px !important; }

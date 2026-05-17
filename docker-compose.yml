@@ -93,6 +93,7 @@ services:
     environment:
       PORT: 3005
       AUTH_SERVICE_URL: http://auth-service:3002
+      CLIENT_SERVICE_URL: http://client-service:3009
       DB_HOST: postgres
       DB_PORT: 5432
       DB_USER: postgres
@@ -180,6 +181,28 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  client-service:
+    build:
+      context: ./services/client-service
+      dockerfile: Dockerfile
+    container_name: invory-client-service
+    ports:
+      - "3009:3009"
+    environment:
+      PORT: 3009
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: invory
+      DB_NAME: invory
+      AUDIT_WEBHOOK_URL: http://audit-service:3006/api/audit/events
+    depends_on:
+      postgres:
+        condition: service_healthy
+      audit-service:
+        condition: service_started
+    restart: unless-stopped
+
   api-gateway:
     build:
       context: .
@@ -192,6 +215,7 @@ services:
       CATEGORY_SERVICE_URL: http://category-service:3003
       USER_SERVICE_URL: http://user-service:3004
       INVENTORY_SERVICE_URL: http://inventory-service:3005
+      CLIENT_SERVICE_URL: http://client-service:3009
       AUDIT_SERVICE_URL: http://audit-service:3006
       EXPORT_SERVICE_URL: http://export-service:3007
       PROVIDER_SERVICE_URL: http://supplier-service:3008
@@ -208,9 +232,23 @@ services:
         condition: service_started
       inventory-service:
         condition: service_started
+      client-service:
+        condition: service_started
       audit-service:
         condition: service_started
       export-service:
+        condition: service_started
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: invory-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      api-gateway:
         condition: service_started
     restart: unless-stopped
 
@@ -235,4 +273,3 @@ services:
 
 volumes:
   invory_pg_data:
-

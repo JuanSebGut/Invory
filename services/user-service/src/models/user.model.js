@@ -85,6 +85,27 @@ function validateUpdateUserPayload(body) {
   return patch;
 }
 
+function validateResetPasswordPayload(body) {
+  if (!body || typeof body !== 'object') {
+    throw createHttpError(400, 'VALIDATION_ERROR', 'El cuerpo de la solicitud es obligatorio');
+  }
+
+  if (!Object.prototype.hasOwnProperty.call(body, 'nueva_contrasena')) {
+    throw createHttpError(400, 'VALIDATION_ERROR', 'nueva_contrasena es obligatoria');
+  }
+
+  const nuevaContrasena = String(body.nueva_contrasena || '');
+  if (nuevaContrasena.length < 8) {
+    throw createHttpError(
+      400,
+      'VALIDATION_ERROR',
+      'nueva_contrasena debe tener al menos 8 caracteres'
+    );
+  }
+
+  return { nueva_contrasena: nuevaContrasena };
+}
+
 function parseUserId(value) {
   const id = Number(value);
   if (!Number.isInteger(id) || id <= 0) {
@@ -120,6 +141,7 @@ module.exports = {
   createHttpError,
   validateCreateUserPayload,
   validateUpdateUserPayload,
+  validateResetPasswordPayload,
   parseUserId,
   parseListQuery,
   extractActorContext,

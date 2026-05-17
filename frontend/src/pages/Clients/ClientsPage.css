@@ -1,0 +1,266 @@
+.clients-page {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.clients-header,
+.clients-toolbar,
+.clients-table-card {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.08));
+}
+
+.clients-header {
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.clients-header h2 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.clients-header p {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.clients-toolbar {
+  padding: 14px;
+  display: grid;
+  grid-template-columns: 1fr 220px;
+  gap: 10px;
+}
+
+.clients-input,
+.clients-select,
+.clients-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 9px 11px;
+  font-size: 13px;
+  font-family: inherit;
+  background: var(--panel-bg);
+}
+
+.clients-textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.clients-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.clients-table thead th {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text);
+  background: var(--bg);
+  padding: 11px 12px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+.clients-table tbody td {
+  font-size: 13px;
+  padding: 11px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.clients-empty {
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.clients-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid;
+}
+
+.clients-badge.is-active,
+.clients-badge.fiado-pagado {
+  color: #0f5132;
+  background: #ecfdf3;
+  border-color: #84e1bc;
+}
+
+.clients-badge.is-inactive,
+.clients-badge.fiado-vencido {
+  color: #842029;
+  background: var(--bg);
+  border-color: #f1aeb5;
+}
+
+.clients-badge.fiado-pendiente {
+  color: #7a2e0e;
+  background: var(--bg);
+  border-color: #ffd08a;
+}
+
+.clients-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.clients-btn {
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 7px 11px;
+  font-size: 12px;
+  cursor: pointer;
+  background: var(--panel-bg);
+}
+
+.clients-btn--primary {
+  background: #2563eb;
+  color: #fff;
+  border-color: #2563eb;
+}
+
+.clients-btn--ghost {
+  border-color: var(--border);
+  color: var(--text-h);
+}
+
+.clients-btn--outline {
+  border-color: #2563eb;
+  color: var(--text-h);
+}
+
+.clients-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.clients-error-banner {
+  margin: 10px;
+  border: 1px solid #f1aeb5;
+  background: var(--bg);
+  color: #842029;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.clients-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.clients-pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.clients-page-btn {
+  min-width: 29px;
+  height: 29px;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  background: var(--panel-bg);
+  cursor: pointer;
+}
+
+.clients-page-btn.is-current {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+}
+
+.clients-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: grid;
+  place-items: center;
+  z-index: 100;
+  padding: 14px;
+}
+
+.clients-modal {
+  width: min(620px, 100%);
+  max-height: 90vh;
+  overflow: auto;
+  background: var(--panel-bg);
+  border-radius: 12px;
+  border: 1px solid #dbe4f0;
+  padding: 16px;
+}
+
+.clients-modal--xl {
+  width: min(1100px, 100%);
+}
+
+.clients-modal h3 {
+  margin: 0 0 12px;
+}
+
+.clients-form-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.clients-form-grid label {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.clients-form-error {
+  margin: 8px 0 0;
+  color: #b42318;
+  font-size: 12px;
+}
+
+.clients-modal-actions {
+  margin-top: 12px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.clients-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.clients-detail-header p {
+  margin: 4px 0 0;
+  color: var(--text);
+}
+
+@media (max-width: 900px) {
+  .clients-toolbar {
+    grid-template-columns: 1fr;
+  }
+}

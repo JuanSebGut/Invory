@@ -17,6 +17,7 @@ function createApp(options = {}) {
       ? new InMemoryProductRepository({
           products: options.seedProducts || [],
           categories: options.seedCategories || [],
+          units: options.seedUnits || [],
         })
       : new PgProductRepository(pool));
 

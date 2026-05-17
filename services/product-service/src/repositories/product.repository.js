@@ -1,6 +1,44 @@
 class PgProductRepository {
   constructor(pool) {
     this.pool = pool;
+    this._schemaSupport = null;
+  }
+
+  async getSchemaSupport() {
+    if (this._schemaSupport) {
+      return this._schemaSupport;
+    }
+
+    const [tableResult, columnsResult] = await Promise.all([
+      this.pool.query(
+        `
+          SELECT EXISTS (
+            SELECT 1
+            FROM information_schema.tables
+            WHERE table_schema = 'public'
+              AND table_name = 'unidades_medida'
+          ) AS has_units_table
+        `
+      ),
+      this.pool.query(
+        `
+          SELECT column_name
+          FROM information_schema.columns
+          WHERE table_schema = 'public'
+            AND table_name = 'productos'
+            AND column_name IN ('id_unidad', 'permite_fraccion')
+        `
+      ),
+    ]);
+
+    const columnNames = new Set(columnsResult.rows.map((row) => row.column_name));
+    this._schemaSupport = {
+      hasUnitsTable: Boolean(tableResult.rows[0]?.has_units_table),
+      hasProductUnitColumns:
+        columnNames.has('id_unidad') && columnNames.has('permite_fraccion'),
+    };
+
+    return this._schemaSupport;
   }
 
   async createProduct({
@@ -16,41 +54,26 @@ class PgProductRepository {
     ubicacion,
     descripcion,
     estado,
+    id_unidad,
+    permite_fraccion,
   }) {
-    const query = `
-      INSERT INTO productos (
-        id_categoria,
-        codigo_barras_unico,
-        nombre,
-        precio_compra,
-        precio_venta,
-        stock_actual,
-        stock_minimo,
-        stock_maximo,
-        fecha_vencimiento,
-        estado,
-        ubicacion,
-        descripcion
-      )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-      RETURNING
-        id_producto,
-        id_categoria,
-        codigo_barras_unico,
-        nombre,
-        precio_compra,
-        precio_venta,
-        stock_actual,
-        stock_minimo,
-        stock_maximo,
-        fecha_vencimiento,
-        estado,
-        fecha_creacion,
-        ubicacion,
-        descripcion
-    `;
+    const support = await this.getSchemaSupport();
+    const columns = [
+      'id_categoria',
+      'codigo_barras_unico',
+      'nombre',
+      'precio_compra',
+      'precio_venta',
+      'stock_actual',
+      'stock_minimo',
+      'stock_maximo',
+      'fecha_vencimiento',
+      'estado',
+      'ubicacion',
+      'descripcion',
+    ];
 
-    const { rows } = await this.pool.query(query, [
+    const values = [
       id_categoria,
       codigo_barras,
       nombre,
@@ -63,12 +86,53 @@ class PgProductRepository {
       estado,
       ubicacion,
       descripcion,
-    ]);
+    ];
+
+    if (support.hasProductUnitColumns) {
+      columns.splice(10, 0, 'id_unidad', 'permite_fraccion');
+      values.splice(10, 0, id_unidad, permite_fraccion);
+    }
+
+    const placeholders = values.map((_value, index) => `$${index + 1}`).join(', ');
+    const query = `
+      INSERT INTO productos (
+        ${columns.join(',\n        ')}
+      )
+      VALUES (${placeholders})
+      RETURNING
+        id_producto,
+        id_categoria,
+        codigo_barras_unico,
+        nombre,
+        precio_compra,
+        precio_venta,
+        stock_actual,
+        stock_minimo,
+        stock_maximo,
+        fecha_vencimiento,
+        estado,
+        ${
+          support.hasProductUnitColumns
+            ? 'id_unidad,'
+            : 'NULL::int AS id_unidad,'
+        }
+        ${
+          support.hasProductUnitColumns
+            ? 'permite_fraccion,'
+            : 'false::boolean AS permite_fraccion,'
+        }
+        fecha_creacion,
+        ubicacion,
+        descripcion
+    `;
+
+    const { rows } = await this.pool.query(query, values);
 
     return rows[0] || null;
   }
 
   async getProductById(idProducto, { includeInactive = false } = {}) {
+    const support = await this.getSchemaSupport();
     const params = [idProducto];
     const filters = ['p.id_producto = $1'];
 
@@ -89,12 +153,32 @@ class PgProductRepository {
         p.stock_maximo,
         p.fecha_vencimiento,
         p.estado,
+        ${
+          support.hasProductUnitColumns
+            ? 'p.id_unidad,'
+            : 'NULL::int AS id_unidad,'
+        }
+        ${
+          support.hasProductUnitColumns
+            ? 'p.permite_fraccion,'
+            : 'false::boolean AS permite_fraccion,'
+        }
         p.fecha_creacion,
         p.ubicacion,
         p.descripcion,
-        c.nombre_categoria
+        c.nombre_categoria,
+        ${
+          support.hasProductUnitColumns && support.hasUnitsTable
+            ? 'u.nombre AS unidad_nombre, u.abreviatura AS unidad_abreviatura'
+            : 'NULL::text AS unidad_nombre, NULL::text AS unidad_abreviatura'
+        }
       FROM productos p
       JOIN categorias c ON c.id_categoria = p.id_categoria
+      ${
+        support.hasProductUnitColumns && support.hasUnitsTable
+          ? 'LEFT JOIN unidades_medida u ON u.id_unidad = p.id_unidad'
+          : ''
+      }
       WHERE ${filters.join(' AND ')}
       LIMIT 1
     `;
@@ -141,7 +225,41 @@ class PgProductRepository {
     return rows[0] || null;
   }
 
+  async getUnitById(idUnidad) {
+    const support = await this.getSchemaSupport();
+    if (!support.hasUnitsTable) {
+      return null;
+    }
+
+    const query = `
+      SELECT id_unidad, nombre, abreviatura, tipo, factor_base
+      FROM unidades_medida
+      WHERE id_unidad = $1
+      LIMIT 1
+    `;
+
+    const { rows } = await this.pool.query(query, [idUnidad]);
+    return rows[0] || null;
+  }
+
+  async listUnits() {
+    const support = await this.getSchemaSupport();
+    if (!support.hasUnitsTable) {
+      return [];
+    }
+
+    const query = `
+      SELECT id_unidad, nombre, abreviatura, tipo, factor_base
+      FROM unidades_medida
+      ORDER BY id_unidad ASC
+    `;
+
+    const { rows } = await this.pool.query(query);
+    return rows;
+  }
+
   async listProducts({ page, size, name, category, barcode, code }) {
+    const support = await this.getSchemaSupport();
     const offset = (page - 1) * size;
     const filters = ['p.estado = true'];
     const params = [];
@@ -185,12 +303,32 @@ class PgProductRepository {
         p.stock_maximo,
         p.fecha_vencimiento,
         p.estado,
+        ${
+          support.hasProductUnitColumns
+            ? 'p.id_unidad,'
+            : 'NULL::int AS id_unidad,'
+        }
+        ${
+          support.hasProductUnitColumns
+            ? 'p.permite_fraccion,'
+            : 'false::boolean AS permite_fraccion,'
+        }
         p.fecha_creacion,
         p.ubicacion,
         p.descripcion,
-        c.nombre_categoria
+        c.nombre_categoria,
+        ${
+          support.hasProductUnitColumns && support.hasUnitsTable
+            ? 'u.nombre AS unidad_nombre, u.abreviatura AS unidad_abreviatura'
+            : 'NULL::text AS unidad_nombre, NULL::text AS unidad_abreviatura'
+        }
       FROM productos p
       JOIN categorias c ON c.id_categoria = p.id_categoria
+      ${
+        support.hasProductUnitColumns && support.hasUnitsTable
+          ? 'LEFT JOIN unidades_medida u ON u.id_unidad = p.id_unidad'
+          : ''
+      }
       ${whereClause}
       ORDER BY p.id_producto ASC
       LIMIT $${params.length - 1}
@@ -202,6 +340,7 @@ class PgProductRepository {
   }
 
   async updateProductPartial(idProducto, patch = {}) {
+    const support = await this.getSchemaSupport();
     const mapping = {
       id_categoria: 'id_categoria',
       nombre: 'nombre',
@@ -214,6 +353,11 @@ class PgProductRepository {
       ubicacion: 'ubicacion',
       descripcion: 'descripcion',
     };
+
+    if (support.hasProductUnitColumns) {
+      mapping.id_unidad = 'id_unidad';
+      mapping.permite_fraccion = 'permite_fraccion';
+    }
 
     const updates = [];
     const values = [];
@@ -250,6 +394,16 @@ class PgProductRepository {
         stock_maximo,
         fecha_vencimiento,
         estado,
+        ${
+          support.hasProductUnitColumns
+            ? 'id_unidad,'
+            : 'NULL::int AS id_unidad,'
+        }
+        ${
+          support.hasProductUnitColumns
+            ? 'permite_fraccion,'
+            : 'false::boolean AS permite_fraccion,'
+        }
         fecha_creacion,
         ubicacion,
         descripcion
@@ -265,9 +419,10 @@ class PgProductRepository {
 }
 
 class InMemoryProductRepository {
-  constructor({ products = [], categories = [] } = {}) {
+  constructor({ products = [], categories = [], units = [] } = {}) {
     this.products = products.map((product) => ({ ...product }));
     this.categories = categories.map((category) => ({ ...category }));
+    this.units = units.map((unit) => ({ ...unit }));
     this.nextId =
       this.products.length > 0
         ? Math.max(...this.products.map((product) => product.id_producto || 0)) + 1
@@ -277,6 +432,8 @@ class InMemoryProductRepository {
   async createProduct(payload) {
     const product = {
       id_producto: this.nextId,
+      id_unidad: null,
+      permite_fraccion: false,
       ...payload,
       stock_actual:
         typeof payload.stock_inicial === 'number' ? payload.stock_inicial : payload.stock_actual || 0,
@@ -300,6 +457,10 @@ class InMemoryProductRepository {
     return {
       ...product,
       nombre_categoria: categoryItem?.nombre_categoria || categoryItem?.nombre || null,
+      unidad_nombre:
+        this.units.find((entry) => entry.id_unidad === product.id_unidad)?.nombre || null,
+      unidad_abreviatura:
+        this.units.find((entry) => entry.id_unidad === product.id_unidad)?.abreviatura || null,
     };
   }
 
@@ -313,6 +474,15 @@ class InMemoryProductRepository {
   async getCategoryById(idCategoria) {
     const category = this.categories.find((item) => item.id_categoria === idCategoria);
     return category ? { ...category } : null;
+  }
+
+  async getUnitById(idUnidad) {
+    const unit = this.units.find((item) => item.id_unidad === idUnidad);
+    return unit ? { ...unit } : null;
+  }
+
+  async listUnits() {
+    return this.units.map((unit) => ({ ...unit }));
   }
 
   async listProducts({ page, size, name, category, barcode, code }) {
@@ -352,6 +522,10 @@ class InMemoryProductRepository {
         return {
           ...item,
           nombre_categoria: categoryItem?.nombre_categoria || categoryItem?.nombre || null,
+          unidad_nombre:
+            this.units.find((entry) => entry.id_unidad === item.id_unidad)?.nombre || null,
+          unidad_abreviatura:
+            this.units.find((entry) => entry.id_unidad === item.id_unidad)?.abreviatura || null,
         };
       }),
     };

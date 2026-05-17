@@ -2,47 +2,36 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
-  --aud-primary:        #2563EB;
-  --aud-primary-dark:   #1D4ED8;
-  --aud-primary-light:  #EFF6FF;
-  --aud-primary-ring:   rgba(37, 99, 235, 0.18);
+  --aud-primary:        var(--accent);
+  --aud-primary-dark:   var(--accent-hover);
+  --aud-primary-light:  var(--bg-surface-elevated);
+  --aud-primary-ring:   rgba(88, 129, 87, 0.15);
 
-  --aud-secondary:      #10B981;
-  --aud-success-bg:     #ECFDF5;
-  --aud-success-border: #6EE7B7;
-  --aud-success-text:   #065F46;
+  --aud-secondary:      var(--success-green);
+  --aud-success-bg:     var(--bg-surface-elevated);
+  --aud-success-border: var(--success-green);
+  --aud-success-text:   var(--success-green);
 
-  --aud-warning:        #F59E0B;
-  --aud-warning-bg:     #FFFBEB;
-  --aud-warning-border: #FCD34D;
-  --aud-warning-text:   #92400E;
+  --aud-danger:         var(--danger-red);
+  --aud-danger-light:   var(--bg-surface-elevated);
+  --aud-danger-border:  var(--danger-red);
+  --aud-danger-text:    var(--danger-red);
+  --aud-danger-dark:    var(--danger-red);
 
-  --aud-danger:         #EF4444;
-  --aud-danger-light:   #FEF2F2;
-  --aud-danger-border:  #FCA5A5;
-  --aud-danger-text:    #7F1D1D;
+  --aud-warn:           var(--warning-orange);
+  --aud-warn-light:     var(--bg-surface-elevated);
+  --aud-warn-border:    var(--warning-orange);
+  --aud-warn-text:      var(--warning-orange);
 
-  --aud-info-bg:        #EFF6FF;
-  --aud-info-border:    #BFDBFE;
-  --aud-info-text:      #1E40AF;
+  --aud-bg:             var(--bg);
+  --aud-surface:        var(--panel-bg);
+  --aud-surface-2:      var(--bg-surface-elevated);
+  --aud-border:         var(--border);
+  --aud-border-strong:  var(--border);
 
-  --aud-bg:             #F3F4F6;
-  --aud-surface:        #FFFFFF;
-  --aud-surface-2:      #F9FAFB;
-  --aud-border:         #E5E7EB;
-  --aud-border-strong:  #D1D5DB;
-
-  --aud-text:           #111827;
-  --aud-text-muted:     #6B7280;
-  --aud-text-soft:      #9CA3AF;
-
-  --aud-radius:         10px;
-  --aud-radius-sm:      6px;
-  --aud-shadow:         0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.05);
-  --aud-shadow-lg:      0 10px 40px rgba(0,0,0,.14);
-
-  --font-main:  'Inter', system-ui, sans-serif;
-  --font-mono:  'JetBrains Mono', monospace;
+  --aud-text:           var(--text-h);
+  --aud-text-muted:     var(--text);
+  --aud-text-soft:      var(--text-muted);
 }
 
 /* AaaAaa PAAgina AaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaa */
@@ -382,11 +371,11 @@ td.table-empty {
   border: 1px solid;
   text-transform: capitalize;
 }
-.badge-modulo--auth        { background: #EEF2FF; color: #3730A3; border-color: #C7D2FE; }
-.badge-modulo--users       { background: #FAF5FF; color: #6B21A8; border-color: #E9D5FF; }
+.badge-modulo--auth        { background: #EEF2FF; color: var(--text-h); border-color: var(--border); }
+.badge-modulo--users       { background: var(--bg); color: var(--text-muted); border-color: var(--border); }
 .badge-modulo--inventory   { background: var(--aud-success-bg); color: var(--aud-success-text); border-color: var(--aud-success-border); }
-.badge-modulo--products    { background: #FFF7ED; color: #9A3412; border-color: #FED7AA; }
-.badge-modulo--categories  { background: #ECFEFF; color: #155E75; border-color: #A5F3FC; }
+.badge-modulo--products    { background: var(--bg); color: var(--text-muted); border-color: #FED7AA; }
+.badge-modulo--categories  { background: #ECFEFF; color: var(--text-h); border-color: var(--border); }
 .badge-modulo--default     { background: var(--aud-bg); color: var(--aud-text-muted); border-color: var(--aud-border-strong); }
 
 /* AaaAaa Badges de acciAAn AaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaa */
@@ -679,14 +668,4 @@ td.table-empty {
 /* AaaAaa Animaciones AaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaaAaa */
 @keyframes fadeIn   { from { opacity: 0 }                              to { opacity: 1 } }
 @keyframes fadeDown { from { opacity: 0; transform: translateY(-6px) } to { opacity: 1; transform: translateY(0) } }
-@keyframes scaleIn  { from { opacity: 0; transform: scale(.96) }       to { opacity: 1; transform: scale(1) } }/* ==== V2 Redesign Overrides: Audit ==== */
-.audit-page__header{padding:18px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(145deg,#fff,#f4fbfd);box-shadow:var(--shadow-sm)}
-.audit-card{border:1px solid var(--line)!important;border-radius:16px!important;box-shadow:var(--shadow-sm)!important}
-.audit-toolbar{padding:14px!important;border:1px solid var(--line)!important;border-radius:14px!important;background:#fff;box-shadow:var(--shadow-sm);margin:10px}
-.audit-table-wrap{padding:10px}
-.audit-table{border:1px solid var(--line);border-radius:12px;overflow:hidden;border-collapse:separate;border-spacing:0}
-.audit-table thead th{background:#eef6f9!important;color:#1f4d61!important;padding:12px 14px!important;border-bottom:1px solid var(--line)!important}
-.audit-table tbody td{padding:12px 14px!important;border-bottom:1px solid #e7eff2!important}
-.audit-table tbody tr:hover td{background:#f3fbfd!important}
-.pagination{padding:12px 14px!important;border-top:1px solid var(--line)!important;background:#f7fcfd!important}
-.modal{border:1px solid var(--line)!important;border-radius:16px!important}
+@keyframes scaleIn  { from { opacity: 0; transform: scale(.96) }       to { opacity: 1; transform: scale(1) } }

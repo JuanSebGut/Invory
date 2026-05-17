@@ -1,9 +1,36 @@
-﻿/* Uniformidad global frontend */
+/* Uniformidad global frontend — theme-unify.css */
 :root {
-  --ui-radius: 14px;
-  --ui-radius-sm: 10px;
-  --ui-border: 1px solid var(--line);
-  --ui-shadow: var(--shadow-sm);
+  --ui-radius: 12px;
+  --ui-radius-sm: 8px;
+  --ui-border: 1px solid var(--border);
+  --ui-shadow: 0 4px 20px rgba(0, 0, 0, 0.03); /* Sombra elegante y suave */
+  --ui-spacing: 20px;
+}
+[data-theme='dark'] {
+  --ui-shadow: 0 4px 20px rgba(0, 0, 0, 0.3); /* Sombra un poco más fuerte para fondo oscuro */
+}
+
+/* ─── Page Layout & Distances ─── */
+/* Eliminar paddings dobles para que la distancia al nav y bordes sea exacta en todas las vistas */
+.page-wrapper, .dashboard, .u-page, .prod-page, .cat-page, .inv, .inv-page, .audit-page, .aud-page, .rp-page, .providers-page, .prov-page, .profile-page, .alerts-page, .al-page, .history-page {
+  padding: 0 !important;
+  margin: 0 auto !important;
+  width: 100% !important;
+  max-width: 1360px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: var(--ui-spacing) !important;
+}
+
+/* ─── Page Headers ─── */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, .page-header h2, .u-page-title, .invoices-header h2 {
+  letter-spacing: -0.025em !important;
+  font-weight: 700 !important;
 }
 
 .cat-page__header,
@@ -15,14 +42,25 @@
 .history-page__header,
 .al-page__header,
 .audit-page__header,
-.profile-page__header {
-  background: #fff;
-  border: var(--ui-border);
-  border-radius: var(--ui-radius);
-  box-shadow: var(--ui-shadow);
-  padding: 16px 18px;
+.profile-page__header,
+.clients-header,
+.invoices-header,
+.page-header {
+  background: linear-gradient(135deg, var(--panel-bg) 0%, var(--bg) 100%) !important;
+  border: var(--ui-border) !important;
+  border-left: 4px solid var(--accent) !important; /* Toque de color vibrante */
+  border-radius: var(--ui-radius) !important;
+  box-shadow: var(--ui-shadow) !important;
+  padding: 20px 24px !important;
+  color: var(--text-h) !important;
+  margin-bottom: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-wrap: wrap !important;
 }
 
+/* ─── Cards & Table Containers ─── */
 .table-card,
 .u-table-card,
 .rp-card,
@@ -31,13 +69,32 @@
 .prov-card,
 .prod-card,
 .audit-card,
-.al-table-card {
-  background: #fff !important;
+.al-table-card,
+.filter-row,
+.invoices-filters,
+.invoices-card {
+  background: var(--panel-bg) !important;
   border: var(--ui-border) !important;
   border-radius: var(--ui-radius) !important;
   box-shadow: var(--ui-shadow) !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
 }
 
+/* Los contenedores de filtros (encima de las tablas) deben tener el mismo padding interno */
+.table-card__toolbar, .filter-row, .invoices-filters {
+  padding: 16px 24px !important;
+  border-bottom: var(--ui-border) !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 16px !important;
+  flex-wrap: wrap !important;
+  background: rgba(163, 177, 138, 0.05) !important; /* Un fondito cálido a los filtros */
+}
+
+/* ─── Tables ─── */
+table,
 .cat-table,
 .u-table,
 .report-table,
@@ -46,15 +103,17 @@
 .prod-table,
 .inv-table,
 .audit-table,
-.al-table {
-  border: var(--ui-border) !important;
-  border-radius: 12px !important;
-  overflow: hidden;
-  border-collapse: separate;
-  border-spacing: 0;
-  background: #fff;
+.al-table,
+.invoices-table {
+  width: 100% !important;
+  border: none !important;
+  border-radius: 0 !important;
+  border-collapse: collapse !important;
+  background: var(--panel-bg) !important;
+  margin: 0 !important;
 }
 
+table th,
 .cat-table th,
 .u-table th,
 .report-table th,
@@ -63,14 +122,22 @@
 .prod-table th,
 .inv-table th,
 .audit-table th,
-.al-table th {
-  background: #edf6f9 !important;
-  border-bottom: 1px solid var(--line) !important;
-  font-size: 11px !important;
-  letter-spacing: .04em;
-  text-transform: uppercase;
+.al-table th,
+.invoices-table th {
+  background: rgba(163, 177, 138, 0.15) !important; /* Tono sage clarito (menos aburrido) */
+  border-bottom: 2px solid var(--dry-sage) !important; /* Borde más notorio */
+  color: var(--text-h) !important;
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: .05em !important;
+  text-transform: uppercase !important;
+  padding: 12px 14px !important;
+  text-align: left !important;
+  white-space: normal !important;
+  line-height: 1.3 !important;
 }
 
+table td,
 .cat-table td,
 .u-table td,
 .report-table td,
@@ -79,23 +146,204 @@
 .prod-table td,
 .inv-table td,
 .audit-table td,
-.al-table td {
-  border-bottom: 1px solid #e7eff2 !important;
+.al-table td,
+.invoices-table td {
+  border-bottom: 1px solid var(--border) !important;
   font-size: 13px !important;
+  color: var(--text) !important;
+  padding: 10px 14px !important;
+  vertical-align: middle !important;
+  word-break: break-word !important;
+  white-space: normal !important;
+  line-height: 1.4 !important;
 }
 
+table td.td-actions,
+table td.u-td-actions,
+table td:has(button) {
+  white-space: nowrap !important;
+  word-break: normal !important;
+  width: 1% !important; /* Forces column to be as small as possible */
+}
+
+/* ─── Buttons (Nuevo Usuario, etc) ─── */
 .btn,
 .u-btn,
-button[class*='btn'] {
+button[class*='btn']:not(.theme-toggle-btn):not(.alert-bell):not(.btn-icon-only):not(.btn-page):not(.invoices-pagination-controls button) {
   border-radius: var(--ui-radius-sm) !important;
-  font-weight: 700 !important;
+  font-weight: 500 !important;
+  font-family: var(--sans) !important;
+  font-size: 13.5px !important;
+  padding: 8px 18px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  height: 38px !important;
+  box-sizing: border-box !important;
+  white-space: nowrap !important;
+  word-break: keep-all !important;
+  cursor: pointer !important;
 }
 
+/* Efecto de clic premium (Tactile feedback) */
+.btn:active, .u-btn:active, button[class*='btn']:not(.theme-toggle-btn):active {
+  transform: scale(0.97) !important;
+}
+
+/* Botones pequeños para tablas */
+[class*='btn--sm'], [class*='btn-sm'] {
+  height: 30px !important;
+  padding: 4px 12px !important;
+  font-size: 12px !important;
+  border-radius: 6px !important;
+}
+
+/* Permitir que los grupos de acciones salten de línea si no caben */
+.u-actions-group, .td-actions, .invoices-actions {
+  display: flex !important;
+  gap: 6px !important;
+  flex-wrap: wrap !important;
+}
+
+/* ─── Semantic Buttons (Crear, Editar, Borrar, Ver) ─── */
+
+/* 1. CREAR / GUARDAR (Primary) - Verde Sólido */
+[class*='btn--primary'], [class*='btn-primary'] {
+  background: var(--accent) !important;
+  color: #ffffff !important;
+  border: 1px solid var(--accent) !important;
+  box-shadow: 0 2px 4px rgba(52, 78, 65, 0.15) !important;
+}
+[class*='btn--primary']:hover, [class*='btn-primary']:hover {
+  background: var(--accent-hover) !important;
+  border-color: var(--accent-hover) !important;
+  box-shadow: 0 4px 10px rgba(52, 78, 65, 0.3) !important;
+}
+
+/* 2. EDITAR / EXPORTAR (Outline) - Borde Pine Teal / Gris Oscuro */
+[class*='btn--outline'], [class*='btn-outline'] {
+  background: var(--panel-bg) !important;
+  color: var(--pine-teal) !important;
+  border: 1.5px solid var(--pine-teal) !important;
+}
+/* En modo oscuro adaptamos el outline a dry-sage para contraste */
+[data-theme='dark'] [class*='btn--outline'], [data-theme='dark'] [class*='btn-outline'] {
+  color: var(--dry-sage) !important;
+  border-color: var(--dry-sage) !important;
+}
+[class*='btn--outline']:hover, [class*='btn-outline']:hover {
+  background: var(--pine-teal) !important;
+  color: #ffffff !important;
+}
+[data-theme='dark'] [class*='btn--outline']:hover, [data-theme='dark'] [class*='btn-outline']:hover {
+  background: var(--dry-sage) !important;
+  color: #111 !important;
+}
+
+/* 3. CANCELAR / VER / LIMPIAR (Ghost) - Borde Gris Neutro */
+[class*='btn--ghost'], [class*='btn-ghost'] {
+  background: var(--panel-bg) !important;
+  color: var(--text-h) !important;
+  border: 1px solid var(--border) !important;
+}
+[class*='btn--ghost']:hover, [class*='btn-ghost']:hover {
+  background: var(--bg-surface-elevated) !important;
+}
+
+/* 4. DESHABILITAR / ELIMINAR (Danger) - Rojo */
+/* Peligro secundario (tablas) */
+[class*='btn--danger']:not([class*='solid']), [class*='btn-danger']:not([class*='solid']) {
+  background: var(--panel-bg) !important;
+  color: var(--danger-red) !important;
+  border: 1px solid var(--danger-red) !important;
+}
+[class*='btn--danger']:not([class*='solid']):hover, [class*='btn-danger']:not([class*='solid']):hover {
+  background: rgba(214, 40, 40, 0.1) !important;
+}
+
+/* Peligro confirmación (modales) */
+[class*='btn--danger-solid'], [class*='btn-danger-solid'] {
+  background: var(--danger-red) !important;
+  color: #ffffff !important;
+  border: 1px solid var(--danger-red) !important;
+  box-shadow: 0 2px 4px rgba(214, 40, 40, 0.15) !important;
+}
+[class*='btn--danger-solid']:hover, [class*='btn-danger-solid']:hover {
+  background: #b51f1f !important;
+  border-color: #b51f1f !important;
+  box-shadow: 0 4px 10px rgba(214, 40, 40, 0.3) !important;
+}
+
+/* ─── Form Fields (Inputs, Selects, Textareas) ─── */
+.form-group input,
+.field__input,
+.field__select,
+.field__textarea,
+.invoices-filters input,
+.invoices-filters select,
+.search-input,
+.clients-input,
+.clients-select,
+.clients-textarea {
+  width: 100% !important;
+  border: 1.5px solid var(--border) !important;
+  border-radius: var(--ui-radius-sm) !important;
+  padding: 8px 14px !important;
+  background: var(--panel-bg) !important;
+  color: var(--text-h) !important;
+  font-family: var(--sans) !important;
+  font-size: 13.5px !important;
+  outline: none !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease !important;
+  height: 38px !important;
+  box-sizing: border-box !important;
+}
+.field__textarea, .clients-textarea {
+  height: auto !important;
+  min-height: 80px !important;
+}
+
+.form-group input:focus,
+.field__input:focus,
+.field__select:focus,
+.field__textarea:focus,
+.invoices-filters input:focus,
+.invoices-filters select:focus,
+.search-input:focus,
+.clients-input:focus,
+.clients-select:focus,
+.clients-textarea:focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 4px rgba(88, 129, 87, 0.15) !important;
+  background: var(--bg) !important; /* Ligerísimo contraste al enfocar */
+}
+
+/* Uniformidad en Labels de formularios */
+.field__label, .form-group label {
+  font-family: var(--sans) !important;
+  font-size: 12.5px !important;
+  font-weight: 500 !important;
+  color: var(--text-h) !important;
+  margin-bottom: 6px !important;
+  display: block !important;
+}
+
+/* ─── Modals ─── */
 .u-modal,
 .modal,
-.rp-card,
+.confirm-modal,
 .login-card {
   border-radius: var(--ui-radius) !important;
+  background: var(--panel-bg) !important;
+  border: var(--ui-border) !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1) !important;
+}
+[data-theme='dark'] .u-modal, [data-theme='dark'] .modal {
+  box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
 
 .login-topbar { min-height: 74px; }
+

@@ -59,6 +59,7 @@ function formatLogRecord(record) {
 
   return {
     id_log: record.id_auditoria,
+    id_accion: record.id_accion || null,
     accion: record.accion,
     modulo: record.modulo,
     entidad: record.entidad_afectada,
@@ -244,6 +245,21 @@ class PgAuditRepository {
       where.push(`LOWER(a.nombre_accion) = LOWER($${params.length})`);
     }
 
+    if (typeof filters.actionId === 'number') {
+      params.push(filters.actionId);
+      where.push(`o.id_accion = $${params.length}`);
+    }
+
+    if (filters.entity) {
+      params.push(filters.entity);
+      where.push(`LOWER(o.entidad_afectada) = LOWER($${params.length})`);
+    }
+
+    if (typeof filters.idUser === 'number') {
+      params.push(filters.idUser);
+      where.push(`o.id_usuario = $${params.length}`);
+    }
+
     if (filters.user) {
       const numericUser = Number(filters.user);
       if (Number.isInteger(numericUser) && numericUser > 0) {
@@ -270,8 +286,9 @@ class PgAuditRepository {
     const listQuery = `
       SELECT
         o.id_auditoria,
+        o.id_accion,
         o.id_usuario,
-        o.usuario_nombre,
+        COALESCE(u.nombre, o.usuario_nombre) AS usuario_nombre,
         o.rol_usuario,
         o.modulo,
         o.entidad_afectada,
@@ -282,6 +299,7 @@ class PgAuditRepository {
         a.nombre_accion AS accion
       FROM auditoria_operaciones o
       JOIN acciones_auditoria a ON a.id_accion = o.id_accion
+      LEFT JOIN usuarios u ON u.id_usuario = o.id_usuario
       ${whereClause}
       ORDER BY o.fecha_hora DESC, o.id_auditoria DESC
       LIMIT $${listParams.length - 1}
@@ -340,13 +358,22 @@ class InMemoryAuditRepository {
       this.logs.length > 0
         ? Math.max(...this.logs.map((log) => log.id_auditoria || 0)) + 1
         : 1;
+    this.actionIdsByName = new Map();
+    this.nextActionId = 1;
   }
 
   async ensureSchema() {}
 
   async createAuditLog(event) {
+    const actionKey = String(event.action || '').toLowerCase();
+    if (!this.actionIdsByName.has(actionKey)) {
+      this.actionIdsByName.set(actionKey, this.nextActionId);
+      this.nextActionId += 1;
+    }
+
     const record = {
       id_auditoria: this.nextId,
+      id_accion: this.actionIdsByName.get(actionKey),
       id_usuario: event.user?.id_usuario || null,
       usuario_nombre: event.user?.nombre || null,
       rol_usuario: event.user?.rol || null,
@@ -388,6 +415,21 @@ class InMemoryAuditRepository {
         }
 
         if (filters.action && String(record.accion).toLowerCase() !== filters.action) {
+          return false;
+        }
+
+        if (typeof filters.actionId === 'number' && Number(record.id_accion) !== filters.actionId) {
+          return false;
+        }
+
+        if (
+          filters.entity &&
+          String(record.entidad_afectada || '').toLowerCase() !== String(filters.entity).toLowerCase()
+        ) {
+          return false;
+        }
+
+        if (typeof filters.idUser === 'number' && Number(record.id_usuario) !== filters.idUser) {
           return false;
         }
 

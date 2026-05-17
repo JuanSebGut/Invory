@@ -1,13 +1,17 @@
-﻿import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { registrarMovimiento, getProductos } from '../../api/inventory.js'
 import { getProveedoresActivos } from '../../api/providers.js'
+import { getClients } from '../../api/clients.js'
+import { createInvoice } from '../../api/invoices.js'
+import { createFiado, registerPago } from '../../api/fiados.js'
 import { generarNumeroFactura } from '../../utils/factura.js'
 import './inventory.css'
 
 const MOTIVOS_SALIDA = [
   { val: 'venta', label: 'Venta' },
+  { val: 'devolucion', label: 'Devolución a proveedor' },
   { val: 'merma', label: 'Merma' },
   { val: 'rotura', label: 'Rotura' },
   { val: 'danado', label: 'Danado' },
@@ -19,8 +23,12 @@ const INITIAL_FORM = {
   cantidad: '',
   id_proveedor: '',
   numero_factura: '',
+  motivo_entrada: 'compra',
   motivo: '',
   monto_pagado: '',
+  id_cliente: '',
+  forma_pago: 'pago_total',
+  fecha_pago_acordada: '',
   tipo_ajuste: 'sobrante',
   motivo_ajuste: '',
   comentario: '',
@@ -41,12 +49,37 @@ function parseProveedores(resp) {
   )
 }
 
+function getProductById(products, productId) {
+  return products.find((item) => String(item.id_producto ?? item.id) === String(productId))
+}
+
+function allowsFraction(product) {
+  if (!product) return false
+  if (typeof product.permite_fraccion === 'boolean') return product.permite_fraccion
+  const normalized = String(product.permite_fraccion ?? '').toLowerCase()
+  return normalized === 'true' || normalized === '1'
+}
+
+function hasDecimal(value) {
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed)) return false
+  return Math.abs(parsed % 1) > Number.EPSILON
+}
+
+function getUnitLabel(product) {
+  if (!product?.unidad) return null
+  const nombre = product.unidad.nombre || 'Unidad'
+  const abreviatura = product.unidad.abreviatura ? ` (${product.unidad.abreviatura})` : ''
+  return `${nombre}${abreviatura}`
+}
+
 export default function Inventory() {
   const { user } = useAuth()
   const isAdmin = user?.rol === 'Administrador'
 
   const [productos, setProductos] = useState([])
   const [proveedores, setProveedores] = useState([])
+  const [clientes, setClientes] = useState([])
   const [productosLoad, setProductosLoad] = useState(true)
 
   const [tipoMovimiento, setTipoMovimiento] = useState('entrada')
@@ -84,7 +117,22 @@ export default function Inventory() {
     loadProveedores()
   }, [])
 
-  const isVentaMulti = tipoMovimiento === 'salida' && form.motivo === 'venta'
+  useEffect(() => {
+    async function loadClientes() {
+      try {
+        const resp = await getClients({ page: 1, size: 500, estado: true })
+        setClientes(resp?.data?.items ?? resp?.items ?? [])
+      } catch {
+        setClientes([])
+      }
+    }
+    loadClientes()
+  }, [])
+
+  const isVenta = tipoMovimiento === 'salida' && form.motivo === 'venta'
+  const isDevolucionProveedor = tipoMovimiento === 'salida' && form.motivo === 'devolucion'
+  const isDevolucionCliente = tipoMovimiento === 'entrada' && form.motivo_entrada === 'devolucion'
+  const isMultiProduct = isVenta || isDevolucionProveedor || isDevolucionCliente
 
   const totalVenta = useMemo(
     () => lineasVenta.reduce((acc, l) => acc + Number(l.cantidad || 0) * Number(l.precio_venta || 0), 0),
@@ -93,7 +141,12 @@ export default function Inventory() {
 
   const montoRecibido = Number(form.monto_pagado || 0)
   const diferencia = montoRecibido - totalVenta
-  const isQtyValid = (value) => Number.isInteger(Number(value)) && Number(value) > 0
+  const isQtyValid = (value, product) => {
+    const qty = Number(value)
+    if (!Number.isFinite(qty) || qty <= 0) return false
+    if (!allowsFraction(product) && hasDecimal(qty)) return false
+    return true
+  }
 
   const shouldShowForceMinimo = useMemo(() => {
     if (!isAdmin) return false
@@ -107,10 +160,11 @@ export default function Inventory() {
       return { stockActual, stockMinimo }
     }
 
-    if (isVentaMulti) {
+    if (isMultiProduct && tipoMovimiento !== 'devolucion') {
       const stockTracker = new Map()
       for (const linea of lineasVenta) {
-        if (!linea.id_producto || !isQtyValid(linea.cantidad)) continue
+        const product = getProductById(productos, linea.id_producto)
+        if (!linea.id_producto || !isQtyValid(linea.cantidad, product)) continue
         const info = getStockInfo(linea.id_producto)
         if (!info) continue
         const key = String(linea.id_producto)
@@ -122,7 +176,8 @@ export default function Inventory() {
       return false
     }
 
-    if (!form.id_producto || !isQtyValid(form.cantidad)) return false
+    const selectedProduct = getProductById(productos, form.id_producto)
+    if (!form.id_producto || !isQtyValid(form.cantidad, selectedProduct)) return false
     const info = getStockInfo(form.id_producto)
     if (!info) return false
 
@@ -135,7 +190,7 @@ export default function Inventory() {
     return projected < info.stockMinimo
   }, [
     isAdmin,
-    isVentaMulti,
+    isMultiProduct,
     lineasVenta,
     productos,
     form.id_producto,
@@ -172,8 +227,12 @@ export default function Inventory() {
 
   function validateSingle() {
     if (!form.id_producto) throw new Error('Selecciona un producto.')
+    const product = getProductById(productos, form.id_producto)
     const qty = Number(form.cantidad)
-    if (!Number.isInteger(qty) || qty <= 0) throw new Error('Cantidad inválida.')
+    if (!Number.isFinite(qty) || qty <= 0) throw new Error('Cantidad inválida.')
+    if (!allowsFraction(product) && hasDecimal(qty)) {
+      throw new Error('Este producto no permite cantidades fraccionadas. Ingrese una cantidad entera.')
+    }
     if (tipoMovimiento === 'salida' && !form.motivo) throw new Error('Selecciona motivo de salida.')
     if (tipoMovimiento === 'ajuste' && !form.motivo_ajuste.trim()) throw new Error('El motivo del ajuste es obligatorio.')
   }
@@ -183,8 +242,16 @@ export default function Inventory() {
     for (let i = 0; i < lineasVenta.length; i += 1) {
       const ln = lineasVenta[i]
       if (!ln.id_producto) throw new Error(`Linea ${i + 1}: selecciona producto.`)
+      const product = getProductById(productos, ln.id_producto)
       const qty = Number(ln.cantidad)
-      if (!Number.isInteger(qty) || qty <= 0) throw new Error(`Linea ${i + 1}: cantidad inválida.`)
+      if (!Number.isFinite(qty) || qty <= 0) throw new Error(`Linea ${i + 1}: cantidad inválida.`)
+      if (!allowsFraction(product) && hasDecimal(qty)) {
+        throw new Error(`Linea ${i + 1}: este producto no permite cantidades fraccionadas.`)
+      }
+    }
+    if (form.forma_pago === 'fiado') {
+      if (!form.id_cliente) throw new Error('Debes seleccionar un cliente para registrar un fiado.')
+      if (!form.fecha_pago_acordada) throw new Error('Debes especificar una fecha de pago acordada.')
     }
   }
 
@@ -194,22 +261,101 @@ export default function Inventory() {
     setResultado(null)
 
     try {
-      if (isVentaMulti) {
+      if (!isAdmin && tipoMovimiento === 'ajuste') {
+        throw new Error('Solo el administrador puede registrar ajustes.')
+      }
+
+      if (isMultiProduct) {
         validateMulti()
-        const factura = form.numero_factura.trim() || generarNumeroFactura('venta')
+        
+        let facturaGenerada = null;
+        let idFacturaReal = null;
+        let facturaNumeroStr = form.numero_factura.trim() || generarNumeroFactura(isDevolucionCliente ? 'devolucion' : 'venta');
+
+        // 1. Crear Factura primero (solo para Venta o Devolución Cliente)
+        try {
+          let finalObservacion = form.comentario || '';
+          if (isVenta) {
+            if (form.forma_pago === 'fiado') {
+               const abono = form.monto_pagado ? Number(form.monto_pagado) : 0;
+               const notaFiado = `[COMPRA FIADA] - Abono inicial: $${abono}.`;
+               finalObservacion = finalObservacion ? `${notaFiado} ${finalObservacion}` : notaFiado;
+            } else if (form.forma_pago === 'pago_total') {
+               const pago = form.monto_pagado ? Number(form.monto_pagado) : totalVenta;
+               const vuelto = pago - totalVenta;
+               const notaPago = `[PAGO TOTAL] - Recibido: $${pago}, Vuelto: $${vuelto >= 0 ? vuelto : 0}.`;
+               finalObservacion = finalObservacion ? `${notaPago} ${finalObservacion}` : notaPago;
+            }
+          } else if (isDevolucionCliente || isDevolucionProveedor) {
+             finalObservacion = finalObservacion ? `[DEVOLUCION] ${finalObservacion}` : '[DEVOLUCION]';
+          }
+
+          if (isDevolucionProveedor) {
+            idFacturaReal = null;
+            facturaNumeroStr = form.numero_factura.trim() || generarNumeroFactura('salida');
+            facturaGenerada = { numero_factura: facturaNumeroStr };
+          } else {
+            const detalleFactura = lineasVenta.map((l) => ({
+              id_producto: Number(l.id_producto),
+              cantidad: Number(l.cantidad),
+              precio_unitario: Number(l.precio_venta),
+            }));
+            
+            const invoicePayload = {
+              id_cliente: form.id_cliente ? Number(form.id_cliente) : null,
+              tipo: isDevolucionCliente ? 'devolucion' : 'venta',
+              detalle: detalleFactura,
+              observaciones: finalObservacion || null,
+            };
+            
+            const invoiceResp = await createInvoice(invoicePayload);
+            facturaGenerada = invoiceResp?.data || invoiceResp;
+            idFacturaReal = facturaGenerada.id_factura;
+            facturaNumeroStr = facturaGenerada.numero_factura || facturaNumeroStr;
+          }
+        } catch (err) {
+          throw new Error('Error al crear la factura: ' + (err.message || 'Desconocido'));
+        }
+
         const procesadas = []
         const errores = []
 
+        // 2. Registrar Movimientos
         for (let i = 0; i < lineasVenta.length; i += 1) {
           const linea = lineasVenta[i]
+          let finalObservacionMovimiento = form.comentario || '';
+          
+          if (isVenta) {
+            if (form.forma_pago === 'fiado') {
+               const abono = form.monto_pagado ? Number(form.monto_pagado) : 0;
+               const notaFiado = `[COMPRA FIADA] - Abono inicial: $${abono}.`;
+               finalObservacionMovimiento = finalObservacionMovimiento ? `${notaFiado} ${finalObservacionMovimiento}` : notaFiado;
+            } else if (form.forma_pago === 'pago_total') {
+               const pago = form.monto_pagado ? Number(form.monto_pagado) : totalVenta;
+               const vuelto = pago - totalVenta;
+               const notaPago = `[PAGO TOTAL] - Recibido: $${pago}, Vuelto: $${vuelto >= 0 ? vuelto : 0}.`;
+               finalObservacionMovimiento = finalObservacionMovimiento ? `${notaPago} ${finalObservacionMovimiento}` : notaPago;
+            }
+          } else if (isDevolucionCliente || isDevolucionProveedor) {
+            finalObservacionMovimiento = finalObservacionMovimiento ? `[DEVOLUCION] ${finalObservacionMovimiento}` : '[DEVOLUCION]';
+          }
+
           const payload = {
             id_producto: Number(linea.id_producto),
-            tipo_movimiento: 'salida',
+            tipo_movimiento: tipoMovimiento,
             cantidad: Number(linea.cantidad),
-            motivo: 'venta',
-            numero_factura: factura,
+            numero_factura: facturaNumeroStr,
+            id_factura: idFacturaReal,
+            comentario: finalObservacionMovimiento || null,
           }
-          if (form.monto_pagado) payload.monto_pagado = Number(form.monto_pagado)
+          
+          if (tipoMovimiento === 'salida') {
+            payload.motivo = form.motivo
+            if (form.motivo === 'venta') {
+              if (form.monto_pagado) payload.monto_pagado = Number(form.monto_pagado)
+              if (form.forma_pago === 'fiado' && !form.monto_pagado) payload.monto_pagado = 0
+            }
+          }
 
           try {
             const resp = await registrarMovimiento(payload, {
@@ -221,28 +367,56 @@ export default function Inventory() {
             break
           }
         }
+        
+        // 3. Registrar Fiado si aplica
+        let fiadoGenerado = null;
+        if (isVenta && form.forma_pago === 'fiado' && errores.length === 0) {
+          try {
+            const fiadoPayload = {
+              id_usuario: user.id_usuario,
+              monto_total: totalVenta,
+              fecha_pago_acordada: form.fecha_pago_acordada,
+              observaciones: form.comentario || null,
+              id_factura: idFacturaReal,
+            };
+            const fiadoResp = await createFiado(Number(form.id_cliente), fiadoPayload);
+            fiadoGenerado = fiadoResp?.data || fiadoResp;
+            
+            // Si el cliente abonó algo inicialmente, registrar pago
+            if (form.monto_pagado && Number(form.monto_pagado) > 0) {
+              await registerPago(fiadoGenerado.id_fiado, {
+                 id_usuario: user.id_usuario,
+                 monto: Number(form.monto_pagado),
+                 observaciones: 'Abono inicial en venta',
+              });
+            }
+          } catch (err) {
+            errores.push({ linea: 'Fiado', message: err.message || 'No se pudo crear el fiado.' });
+          }
+        }
 
         if (errores.length) {
           setResultado({
             tipo: 'venta_multiproducto_parcial',
-            numero_factura: factura,
+            numero_factura: facturaNumeroStr,
             procesadas,
             errores,
             totalVenta,
             monto_pagado: form.monto_pagado ? Number(form.monto_pagado) : null,
             vuelto: form.monto_pagado ? Number(form.monto_pagado) - totalVenta : null,
           })
-          setError(`Se procesaron ${procesadas.length} linea(s). Fallo en linea ${errores[0].linea}: ${errores[0].message}`)
+          setError(`Se procesaron ${procesadas.length} linea(s). Fallo: ${errores[0].message}`)
           return
         }
 
         setResultado({
           tipo: 'venta_multiproducto',
-          numero_factura: factura,
+          numero_factura: facturaNumeroStr,
           items: procesadas.map((x) => x.data),
           totalVenta,
           monto_pagado: form.monto_pagado ? Number(form.monto_pagado) : null,
           vuelto: form.monto_pagado ? Number(form.monto_pagado) - totalVenta : null,
+          fiado: fiadoGenerado,
         })
         return
       }
@@ -306,11 +480,16 @@ export default function Inventory() {
             <div className="registro-result">
               {resultado.tipo === 'venta_multiproducto' && (
                 <>
-                  <h3 className="registro-result__title">Venta multiproducto registrada</h3>
+                  <h3 className="registro-result__title">{isDevolucionCliente ? 'Devolución registrada' : 'Venta o salida multiproducto registrada'}</h3>
                   <p className="registro-result__detail">Factura: <strong>{resultado.numero_factura}</strong></p>
                   <p className="registro-result__detail">Total venta: <strong>{resultado.totalVenta}</strong></p>
                   {resultado.monto_pagado != null && (
-                    <p className="registro-result__detail">Monto recibido: <strong>{resultado.monto_pagado}</strong> · Vuelto: <strong>{resultado.vuelto}</strong></p>
+                    <p className="registro-result__detail">Monto recibido/abonado: <strong>{resultado.monto_pagado}</strong> · Vuelto/Saldo: <strong>{resultado.vuelto}</strong></p>
+                  )}
+                  {resultado.fiado && (
+                    <p className="registro-result__detail" style={{ color: 'var(--color-warning)' }}>
+                      <strong>¡Fiado Registrado!</strong> (ID #{resultado.fiado.id_fiado})
+                    </p>
                   )}
                 </>
               )}
@@ -338,12 +517,13 @@ export default function Inventory() {
             </div>
           ) : (
             <>
-          <div className="tipo-selector">
-            <button type="button" className={`tipo-btn ${tipoMovimiento === 'entrada' ? 'active--entrada' : ''}`} onClick={() => resetByTipo('entrada')}>Entrada</button>
-            <button type="button" className={`tipo-btn ${tipoMovimiento === 'salida' ? 'active--salida' : ''}`} onClick={() => resetByTipo('salida')}>Salida</button>
-            {isAdmin && <button type="button" className={`tipo-btn ${tipoMovimiento === 'ajuste' ? 'active--ajuste' : ''}`} onClick={() => resetByTipo('ajuste')}>Ajuste</button>}
+              <div className="inv-tabs" style={{ marginBottom: '22px' }}>
+            <button type="button" className={`inv-tab inv-tab--entrada ${tipoMovimiento === 'entrada' ? 'active' : ''}`} onClick={() => resetByTipo('entrada')}>Entrada</button>
+            <button type="button" className={`inv-tab inv-tab--salida ${tipoMovimiento === 'salida' ? 'active' : ''}`} onClick={() => resetByTipo('salida')}>Salida</button>
+            {isAdmin && <button type="button" className={`inv-tab inv-tab--ajuste ${tipoMovimiento === 'ajuste' ? 'active' : ''}`} onClick={() => resetByTipo('ajuste')}>Ajuste</button>}
           </div>
 
+          <div className="inv-form">
           {error && <div className="alert-banner alert-banner--error">{error}</div>}
 
           <div className="form-row">
@@ -351,6 +531,15 @@ export default function Inventory() {
               <label className="field__label">Numero de factura</label>
               <input className="field__input" value={form.numero_factura} onChange={(e) => setForm((p) => ({ ...p, numero_factura: e.target.value }))} />
             </div>
+            {tipoMovimiento === 'entrada' && (
+              <div className="field">
+                <label className="field__label">Tipo de entrada</label>
+                <select className="field__select" value={form.motivo_entrada} onChange={(e) => setForm((p) => ({ ...p, motivo_entrada: e.target.value }))}>
+                  <option value="compra">Ingreso normal / Compra</option>
+                  <option value="devolucion">Devolución de cliente</option>
+                </select>
+              </div>
+            )}
             {tipoMovimiento === 'salida' && (
               <div className="field">
                 <label className="field__label">Motivo de salida</label>
@@ -362,57 +551,111 @@ export default function Inventory() {
             )}
           </div>
 
-          {isVentaMulti ? (
+          {isMultiProduct ? (
             <>
-              {lineasVenta.map((linea, idx) => {
-                const producto = productos.find((p) => String(p.id_producto) === String(linea.id_producto))
-                const subtotal = Number(linea.cantidad || 0) * Number(linea.precio_venta || 0)
-                return (
-                  <div className="venta-linea" key={`linea-${idx}`}>
-                    <div className="venta-linea__header">Linea {idx + 1}</div>
-                    <div className="form-row venta-linea__grid">
-                    <div className="field">
-                      <label className="field__label">Producto</label>
-                      <select className="field__select" value={linea.id_producto} onChange={(e) => {
-                        const selected = productos.find((x) => String(x.id_producto) === String(e.target.value))
-                        updateLinea(idx, {
-                          id_producto: e.target.value,
-                          precio_venta: Number(selected?.precio_venta || 0),
-                        })
-                      }}>
-                        <option value="">Selecciona</option>
-                        {productos.map((p) => <option key={p.id_producto} value={p.id_producto}>{p.nombre}</option>)}
-                      </select>
-                    </div>
-                    <div className="field">
-                      <label className="field__label">Cantidad</label>
-                      <input className="field__input" type="number" min="1" value={linea.cantidad} onChange={(e) => updateLinea(idx, { cantidad: Number(e.target.value || 1) })} />
-                    </div>
-                    <div className="field">
-                      <label className="field__label">Precio unitario</label>
-                      <input className="field__input" readOnly value={Number(linea.precio_venta || producto?.precio_venta || 0)} />
-                    </div>
-                    <div className="field">
-                      <label className="field__label">Subtotal</label>
-                      <input className="field__input" readOnly value={subtotal} />
-                    </div>
-                    <div className="field venta-linea__remove">
-                      <button type="button" className="btn btn--ghost" onClick={() => removeLinea(idx)}>Quitar</button>
-                    </div>
-                  </div>
-                  </div>
-                )
-              })}
+              <div className="inv-multi-table-wrap">
+                <table className="inv-multi-table">
+                  <thead>
+                    <tr>
+                      <th>Producto</th>
+                      <th>Cantidad</th>
+                      <th>Precio unitario</th>
+                      <th>Subtotal</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {lineasVenta.map((linea, idx) => {
+                      const producto = getProductById(productos, linea.id_producto)
+                      const subtotal = Number(linea.cantidad || 0) * Number(linea.precio_venta || 0)
+                      const allowsFractionLine = allowsFraction(producto)
+                      return (
+                        <tr key={`linea-${idx}`}>
+                          <td>
+                            <select className="field__select" value={linea.id_producto} onChange={(e) => {
+                              const selected = productos.find((x) => String(x.id_producto) === String(e.target.value))
+                              updateLinea(idx, {
+                                id_producto: e.target.value,
+                                precio_venta: Number(selected?.precio_venta || 0),
+                              })
+                            }}>
+                              <option value="">Selecciona</option>
+                              {productos.map((p) => <option key={p.id_producto ?? p.id} value={p.id_producto ?? p.id}>{p.nombre}</option>)}
+                            </select>
+                          </td>
+                          <td>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <input
+                                className="field__input"
+                                type="number"
+                                min={allowsFractionLine ? '0.001' : '1'}
+                                step={allowsFractionLine ? '0.001' : '1'}
+                                value={linea.cantidad}
+                                onChange={(e) => updateLinea(idx, { cantidad: e.target.value })}
+                                style={{ width: '80px' }}
+                              />
+                              <span className="unit-label" style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>{getUnitLabel(producto) || ''}</span>
+                            </div>
+                          </td>
+                          <td>
+                            <input className="field__input" readOnly value={Number(linea.precio_venta || producto?.precio_venta || 0)} style={{ width: '100px' }} />
+                          </td>
+                          <td>
+                            <input className="field__input" readOnly value={subtotal} style={{ width: '100px' }} />
+                          </td>
+                          <td>
+                            <button type="button" className="btn btn--icon btn--ghost" onClick={() => removeLinea(idx)} title="Quitar línea">
+                              ✕
+                            </button>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
 
-              <div className="venta-actions">
+              <div className="venta-actions" style={{ marginTop: '12px' }}>
                 <button type="button" className="btn btn--ghost" onClick={addLinea}>+ Agregar producto</button>
               </div>
 
-              <div className="form-row venta-resumen">
-                <div className="field">
-                  <label className="field__label">Monto recibido del cliente (opcional)</label>
-                  <input className="field__input" type="number" min="0" value={form.monto_pagado} onChange={(e) => setForm((p) => ({ ...p, monto_pagado: e.target.value }))} />
+              <div className="form-row" style={{ marginTop: '24px' }}>
+                {!isDevolucionProveedor && (
+                  <div className="field">
+                    <label className="field__label">Cliente (opcional)</label>
+                    <select className="field__select" value={form.id_cliente} onChange={(e) => setForm((p) => ({ ...p, id_cliente: e.target.value }))}>
+                      <option value="">Consumidor Final</option>
+                      {clientes.map((c) => <option key={c.id_cliente} value={c.id_cliente}>{c.nombre}</option>)}
+                    </select>
+                  </div>
+                )}
+                {isVenta && (
+                  <div className="field">
+                    <label className="field__label">Forma de Pago</label>
+                    <select className="field__select" value={form.forma_pago} onChange={(e) => setForm((p) => ({ ...p, forma_pago: e.target.value }))}>
+                      <option value="pago_total">Pago Total</option>
+                      <option value="fiado">Fiado</option>
+                    </select>
+                  </div>
+                )}
+              </div>
+
+              {isVenta && form.forma_pago === 'fiado' && (
+                <div className="form-row">
+                  <div className="field">
+                    <label className="field__label">Fecha de pago acordada *</label>
+                    <input className="field__input" type="date" value={form.fecha_pago_acordada} onChange={(e) => setForm((p) => ({ ...p, fecha_pago_acordada: e.target.value }))} />
+                  </div>
                 </div>
+              )}
+
+              <div className="form-row venta-resumen">
+                {isVenta && (
+                  <div className="field">
+                    <label className="field__label">Monto recibido del cliente (opcional)</label>
+                    <input className="field__input" type="number" min="0" value={form.monto_pagado} onChange={(e) => setForm((p) => ({ ...p, monto_pagado: e.target.value }))} />
+                  </div>
+                )}
                 <div className="field">
                   <label className="field__label">Resumen</label>
                   <div className="field__hint">
@@ -434,12 +677,24 @@ export default function Inventory() {
                   <label className="field__label">Producto</label>
                   <select className="field__select" value={form.id_producto} onChange={(e) => setForm((p) => ({ ...p, id_producto: e.target.value }))}>
                     <option value="">Selecciona</option>
-                    {productos.map((p) => <option key={p.id_producto} value={p.id_producto}>{p.nombre}</option>)}
+                    {productos.map((p) => <option key={p.id_producto ?? p.id} value={p.id_producto ?? p.id}>{p.nombre}</option>)}
                   </select>
                 </div>
                 <div className="field">
-                  <label className="field__label">Cantidad</label>
-                  <input className="field__input" type="number" min="1" value={form.cantidad} onChange={(e) => setForm((p) => ({ ...p, cantidad: e.target.value }))} />
+                  <label className="field__label">
+                    Cantidad
+                    {getUnitLabel(getProductById(productos, form.id_producto))
+                      ? ` · ${getUnitLabel(getProductById(productos, form.id_producto))}`
+                      : ''}
+                  </label>
+                  <input
+                    className="field__input"
+                    type="number"
+                    min={allowsFraction(getProductById(productos, form.id_producto)) ? '0.001' : '1'}
+                    step={allowsFraction(getProductById(productos, form.id_producto)) ? '0.001' : '1'}
+                    value={form.cantidad}
+                    onChange={(e) => setForm((p) => ({ ...p, cantidad: e.target.value }))}
+                  />
                 </div>
               </div>
 
@@ -506,6 +761,7 @@ export default function Inventory() {
             <button type="button" className={`btn btn--${tipoMovimiento}`} onClick={submit} disabled={loading || productosLoad}>
               {loading ? 'Registrando...' : 'Registrar'}
             </button>
+          </div>
           </div>
             </>
           )}

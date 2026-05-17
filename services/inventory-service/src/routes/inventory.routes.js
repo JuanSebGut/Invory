@@ -22,6 +22,10 @@ function createMovementsRouter(controller) {
   const router = Router();
   router.post('/movements', controller.registerMovement);
   router.get('/movements', controller.listMovements);
+  router.post('/facturas', controller.createInvoice);
+  router.get('/facturas', controller.listInvoices);
+  router.get('/facturas/:id', controller.getInvoiceById);
+  router.patch('/facturas/:id/anular', controller.cancelInvoice);
   router.get('/reports/:reportType', controller.getReportByType);
   return router;
 }

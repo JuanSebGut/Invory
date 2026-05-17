@@ -4,6 +4,8 @@ function buildServiceConfig(overrides = {}) {
   return {
     authServiceUrl:
       overrides.authServiceUrl || process.env.AUTH_SERVICE_URL || 'http://localhost:3002',
+    clientServiceUrl:
+      overrides.clientServiceUrl || process.env.CLIENT_SERVICE_URL || 'http://localhost:3009',
     ms06MovementWebhookUrl:
       overrides.ms06MovementWebhookUrl || process.env.MS06_MOVEMENT_WEBHOOK_URL || '',
     ms09MovementWebhookUrl:

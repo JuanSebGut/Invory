@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { getMovimientos } from '../../api/inventory.js'
 import { getAlerts } from '../../api/alerts.js'
 import { getReport } from '../../api/reports.js'
-import './dashboard.css'
+import './Dashboard.css'
 
 function normalizeAlerts(payload) {
   if (Array.isArray(payload)) return payload
@@ -20,13 +20,13 @@ function todayDate() {
 }
 
 function formatMoney(v) {
-  if (v == null) return 'Aaa'
+  if (v == null) return 'N/A'
   return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(Number(v))
 }
 
 function formatFechaHora(isoString) {
-  if (!isoString) return { fecha: 'Aaa', hora: '' }
   const d = new Date(isoString)
+  if (Number.isNaN(d.getTime())) return { fecha: 'N/A', hora: '' }
   const opts = { timeZone: 'America/Bogota' }
   const fecha = d.toLocaleDateString('es-CO', { ...opts, day: '2-digit', month: '2-digit', year: 'numeric' })
   const hora = d.toLocaleTimeString('es-CO', { ...opts, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })
@@ -96,11 +96,11 @@ export default function DashboardPage() {
                 <span className="kpi-alert-indicator" title="Hay alertas activas" />
               )}
             </p>
-            {loading ? <div className="kpi-card__skeleton" /> : <p className="kpi-card__value">{kpi.lowStock ?? 'Aaa'}</p>}
+            {loading ? <div className="kpi-card__skeleton" /> : <p className="kpi-card__value">{kpi.lowStock ?? 'N/A'}</p>}
           </article>
           <article className="kpi-card kpi-card--moves">
             <p className="kpi-card__label">Movimientos hoy</p>
-            {loading ? <div className="kpi-card__skeleton" /> : <p className="kpi-card__value">{kpi.movementsToday ?? 'Aaa'}</p>}
+            {loading ? <div className="kpi-card__skeleton" /> : <p className="kpi-card__value">{kpi.movementsToday ?? 'N/A'}</p>}
           </article>
           <article className="kpi-card kpi-card--value">
             <p className="kpi-card__label">Valor inventario</p>
@@ -120,9 +120,9 @@ export default function DashboardPage() {
                 return (
                   <tr key={m.id_movimiento}>
                     <td>{m.tipo || m.movement_type}</td>
-                    <td>{m.nombre_producto || 'Aaa'}</td>
+                    <td>{m.nombre_producto || 'N/A'}</td>
                     <td>{m.cantidad}</td>
-                    <td>{m.nuevo_stock ?? m.stock_posterior ?? 'Aaa'}</td>
+                    <td>{m.nuevo_stock ?? m.stock_posterior ?? 'N/A'}</td>
                     <td>{f.fecha} {f.hora}</td>
                   </tr>
                 )

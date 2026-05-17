@@ -293,13 +293,13 @@ export default function Dashboard() {
       sublabel: 'CatAAlogo completo',
       onClick: () => navigate('/productos'),
     },
-    ...(isAdmin ? [{
+    {
       icon: <IconPlus />,
       iconVariant: 'success',
       label: 'Registrar producto',
       sublabel: 'Alta en catAAlogo',
       onClick: () => navigate('/productos'),
-    }] : []),
+    },
     {
       icon: <IconReceipt />,
       iconVariant: 'warning',

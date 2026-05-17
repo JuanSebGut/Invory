@@ -67,6 +67,7 @@ const { createCategoryRoutes } = require('./routes/category.routes');
 const { createProductRoutes } = require('./routes/product.routes');
 const { createProviderRoutes } = require('./routes/provider.routes');
 const { createInventoryRouter } = require('./routes/inventory.routes');
+const { createClientRoutes, createFiadoRoutes } = require('./routes/client.routes');
 const { createAuditRoutes } = require('./routes/audit.routes');
 const { createExportRoutes } = require('./routes/export.routes');
 
@@ -83,6 +84,7 @@ const { createExportRoutes } = require('./routes/export.routes');
  * @param {string} [options.productServiceUrl]
  * @param {string} [options.providerServiceUrl]
  * @param {string} [options.inventoryServiceUrl]
+ * @param {string} [options.clientServiceUrl]
  * @param {string} [options.auditServiceUrl]
  * @param {Function} [options.fetchImpl=fetch]
  */
@@ -161,6 +163,24 @@ function createApp(options = {}) {
     '/api/providers',
     createProviderRoutes({
       providerServiceUrl: config.providerServiceUrl,
+      authMiddleware,
+      fetchImpl,
+    })
+  );
+
+  app.use(
+    '/api/clients',
+    createClientRoutes({
+      clientServiceUrl: config.clientServiceUrl,
+      authMiddleware,
+      fetchImpl,
+    })
+  );
+
+  app.use(
+    '/api/fiados',
+    createFiadoRoutes({
+      clientServiceUrl: config.clientServiceUrl,
       authMiddleware,
       fetchImpl,
     })

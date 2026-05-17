@@ -120,6 +120,20 @@ class PgUserRepository {
   async softDeleteUser(idUsuario) {
     return this.updateUserPartial(idUsuario, { estado: false });
   }
+
+  async resetPassword(idUsuario, contrasenaHash) {
+    const query = `
+      UPDATE usuarios
+      SET contrasena = $1,
+          intentos_fallidos = 0,
+          bloqueado = false
+      WHERE id_usuario = $2
+      RETURNING id_usuario, id_rol, nombre, correo, contrasena, estado, fecha_creacion, ultimo_acceso, intentos_fallidos, bloqueado
+    `;
+
+    const { rows } = await this.pool.query(query, [contrasenaHash, idUsuario]);
+    return rows[0] || null;
+  }
 }
 
 class InMemoryUserRepository {
@@ -189,6 +203,14 @@ class InMemoryUserRepository {
 
   async softDeleteUser(idUsuario) {
     return this.updateUserPartial(idUsuario, { estado: false });
+  }
+
+  async resetPassword(idUsuario, contrasenaHash) {
+    return this.updateUserPartial(idUsuario, {
+      contrasena: contrasenaHash,
+      intentos_fallidos: 0,
+      bloqueado: false,
+    });
   }
 
   async getRawById(idUsuario) {

@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 
 /**
  * Rutas del API Gateway hacia el inventory-service (MS-05).
@@ -100,7 +100,10 @@ async function proxyToInventory({
   const upstreamResponse = await fetchImpl(upstreamUrl, {
     method,
     headers,
-    body: method === 'POST' || method === 'PUT' ? JSON.stringify(req.body || {}) : undefined,
+    body:
+      method === 'POST' || method === 'PUT' || method === 'PATCH'
+        ? JSON.stringify(req.body || {})
+        : undefined,
   });
 
   await sendProxyResponse(upstreamResponse, res);
@@ -182,6 +185,21 @@ function createInventoryRouter({ inventoryServiceUrl, authMiddleware, fetchImpl 
 
   router.post('/movements', ...guards, async (req, res, next) => {
     try {
+      const role = String(req.authUser?.rol || '').trim().toLowerCase();
+      const movementType = String(req.body?.tipo_movimiento || req.body?.tipo || '')
+        .trim()
+        .toLowerCase();
+
+      if (role === String(EMPLEADO).toLowerCase() && movementType === 'ajuste') {
+        return res.status(403).json({
+          success: false,
+          error: {
+            code: 'INVENTORY_ADJUSTMENT_FORBIDDEN',
+            message: 'No tiene permisos para registrar ajustes de inventario',
+          },
+        });
+      }
+
       const upstreamUrl = buildProxyUrl(
         inventoryServiceUrl,
         '/api/inventory/movements',
@@ -205,6 +223,9 @@ function createInventoryRouter({ inventoryServiceUrl, authMiddleware, fetchImpl 
 
   router.get('/reports/:reportType', ...reportGuards, async (req, res) => {
     try {
+      const role = String(req.authUser?.rol || '').trim().toLowerCase();
+      const reportType = String(req.params.reportType || '').trim().toLowerCase();
+
       const upstreamUrl = buildProxyUrl(
         inventoryServiceUrl,
         `/api/inventory/reports/${req.params.reportType}`,
@@ -219,6 +240,90 @@ function createInventoryRouter({ inventoryServiceUrl, authMiddleware, fetchImpl 
       });
     } catch (_error) {
       res.status(502).json({ error: 'Inventory service unavailable' });
+    }
+  });
+
+  const adminGuards = authMiddleware
+    ? [authMiddleware, requireRoles([ADMINISTRADOR])]
+    : [requireRoles([ADMINISTRADOR])];
+
+  const mixedGuards = authMiddleware
+    ? [authMiddleware, requireRoles([ADMINISTRADOR, EMPLEADO])]
+    : [requireRoles([ADMINISTRADOR, EMPLEADO])];
+
+  router.post('/facturas', ...mixedGuards, async (req, res, next) => {
+    try {
+      const upstreamUrl = buildProxyUrl(
+        inventoryServiceUrl,
+        '/api/inventory/facturas',
+        req.query
+      );
+      await proxyToInventory({
+        req,
+        res,
+        upstreamUrl,
+        method: 'POST',
+        fetchImpl,
+      });
+    } catch (error) {
+      return next(error);
+    }
+  });
+
+  router.get('/facturas', ...mixedGuards, async (req, res, next) => {
+    try {
+      const upstreamUrl = buildProxyUrl(
+        inventoryServiceUrl,
+        '/api/inventory/facturas',
+        req.query
+      );
+      await proxyToInventory({
+        req,
+        res,
+        upstreamUrl,
+        method: 'GET',
+        fetchImpl,
+      });
+    } catch (error) {
+      return next(error);
+    }
+  });
+
+  router.get('/facturas/:id', ...mixedGuards, async (req, res, next) => {
+    try {
+      const upstreamUrl = buildProxyUrl(
+        inventoryServiceUrl,
+        `/api/inventory/facturas/${req.params.id}`,
+        req.query
+      );
+      await proxyToInventory({
+        req,
+        res,
+        upstreamUrl,
+        method: 'GET',
+        fetchImpl,
+      });
+    } catch (error) {
+      return next(error);
+    }
+  });
+
+  router.patch('/facturas/:id/anular', ...adminGuards, async (req, res, next) => {
+    try {
+      const upstreamUrl = buildProxyUrl(
+        inventoryServiceUrl,
+        `/api/inventory/facturas/${req.params.id}/anular`,
+        req.query
+      );
+      await proxyToInventory({
+        req,
+        res,
+        upstreamUrl,
+        method: 'PATCH',
+        fetchImpl,
+      });
+    } catch (error) {
+      return next(error);
     }
   });
 

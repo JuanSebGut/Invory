@@ -4,7 +4,6 @@ function pickFirstArray(candidates) {
   for (const candidate of candidates) {
     if (Array.isArray(candidate)) return candidate
   }
-
   return []
 }
 
@@ -13,22 +12,22 @@ function getToken() {
 }
 
 function extractErrorMessage(data) {
-  if (!data) return 'OcurriAA un error inesperado. Por favor intenta nuevamente.'
+  if (!data) return 'Ocurri� un error inesperado. Por favor intenta nuevamente.'
 
   const candidates = [
     data?.error?.message,
-    data.message,
-    data.mensaje,
-    data.error,
-    data.msg,
-    data.detail,
+    data?.message,
+    data?.mensaje,
+    data?.error,
+    data?.msg,
+    data?.detail,
   ]
 
   for (const candidate of candidates) {
     if (candidate && typeof candidate === 'string' && candidate.trim()) return candidate.trim()
   }
 
-  return 'OcurriAA un error inesperado. Por favor intenta nuevamente.'
+  return 'Ocurri� un error inesperado. Por favor intenta nuevamente.'
 }
 
 async function apiFetch(path, options = {}) {
@@ -42,7 +41,7 @@ async function apiFetch(path, options = {}) {
   })
 
   let data = null
-  try { data = await response.json() } catch { /* sin body */ }
+  try { data = await response.json() } catch {}
 
   if (!response.ok) {
     const error = new Error(extractErrorMessage(data))
@@ -58,12 +57,25 @@ export const REPORT_TYPES = [
   { value: 'movements', label: 'Movimientos' },
   { value: 'sales', label: 'Ventas' },
   { value: 'stock', label: 'Stock actual' },
+  { value: 'profits', label: 'Rentabilidad' },
+  { value: 'comparative', label: 'Comparativo' },
+  { value: 'no-movement', label: 'Sin movimiento' },
+  { value: 'by-category', label: 'Por categor�a' },
 ]
 
 export const REPORT_FILTERS = {
   movements: ['fecha_inicio', 'fecha_fin', 'categoria', 'producto', 'tipo'],
   sales: ['fecha_inicio', 'fecha_fin', 'categoria', 'producto'],
   stock: ['categoria', 'producto'],
+  profits: ['fecha_desde', 'fecha_hasta'],
+  comparative: [
+    'periodo_actual_desde',
+    'periodo_actual_hasta',
+    'periodo_anterior_desde',
+    'periodo_anterior_hasta',
+  ],
+  'no-movement': ['dias'],
+  'by-category': [],
 }
 
 export const MOVEMENT_FILTER_OPTIONS = [
@@ -79,7 +91,7 @@ export function buildReportQuery(reportType, filters = {}) {
   for (const key of supportedFilters) {
     const value = filters[key]
     if (value !== undefined && value !== null && value !== '') {
-      params.set(key, value)
+      params.set(key, String(value))
     }
   }
 
@@ -105,19 +117,17 @@ export function normalizeCatalogResponse({ categoriesResponse, productsResponse 
     productsResponse?.data,
   ])
 
-  // Normaliza el id de categorAAa independientemente del nombre del campo
-  const categories = rawCats.map(c => ({
+  const categories = rawCats.map((c) => ({
     ...c,
-    id_categoria:      c.id_categoria ?? c.id ?? c.id_cat ?? c.categoria_id,
-    nombre_categoria:  c.nombre_categoria ?? c.nombre ?? c.name ?? c.categoria,
+    id_categoria: c.id_categoria ?? c.id ?? c.id_cat ?? c.categoria_id,
+    nombre_categoria: c.nombre_categoria ?? c.nombre ?? c.name ?? c.categoria,
   }))
 
-  // Normaliza el id de producto independientemente del nombre del campo
-  const products = rawProds.map(p => ({
+  const products = rawProds.map((p) => ({
     ...p,
-    id_producto:  p.id_producto ?? p.id ?? p.producto_id,
+    id_producto: p.id_producto ?? p.id ?? p.producto_id,
     id_categoria: p.id_categoria ?? p.categoria_id ?? p.id_cat,
-    nombre:       p.nombre ?? p.name ?? p.producto,
+    nombre: p.nombre ?? p.name ?? p.producto,
   }))
 
   return { categories, products }
@@ -126,7 +136,7 @@ export function normalizeCatalogResponse({ categoriesResponse, productsResponse 
 export async function getReportFiltersCatalog() {
   const [categoriesResponse, productsResponse] = await Promise.all([
     apiFetch('/categories?estado=activo'),
-    apiFetch('/products?page=1&size=100'),
+    apiFetch('/products?page=1&size=300'),
   ])
 
   return normalizeCatalogResponse({ categoriesResponse, productsResponse })

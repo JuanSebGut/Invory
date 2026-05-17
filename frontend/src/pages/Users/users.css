@@ -99,7 +99,7 @@
   border-color: var(--danger);
   box-shadow:   0 1px 3px rgba(239,68,68,.3);
 }
-.u-btn--danger-solid:not(:disabled):hover { background: #dc2626; border-color: #dc2626; }
+.u-btn--danger-solid:not(:disabled):hover { background: var(--danger-dark, #dc2626); border-color: var(--border); }
 
 .u-btn--sm { padding: 6px 12px; font-size: 12px; }
 
@@ -254,6 +254,7 @@
   display:     flex;
   align-items: center;
   gap:         10px;
+  white-space: nowrap;
 }
 .u-avatar {
   width:          34px;
@@ -294,11 +295,11 @@
 }
 
 .u-badge--active {
-  background: #ECFDF5;
+  background: var(--bg-surface-elevated);
   color:      #065f46;
   border:     1px solid #6EE7B7;
 }
-.u-badge--active .u-badge-dot { background: #10B981; }
+.u-badge--active .u-badge-dot { background: var(--success-green); }
 
 .u-badge--inactive {
   background: var(--bg);
@@ -308,18 +309,18 @@
 .u-badge--inactive .u-badge-dot { background: var(--text-soft); }
 
 .u-badge--admin {
-  background: var(--primary-light, #EFF6FF);
+  background: var(--primary-light, var(--bg-surface-elevated));
   color:      var(--primary-dark, #1D4ED8);
   border:     1px solid #BFDBFE;
 }
 .u-badge--admin .u-badge-dot { background: var(--primary); }
 
 .u-badge--operator {
-  background: #FFFBEB;
-  color:      #92400E;
+  background: var(--bg);
+  color: var(--text-muted);
   border:     1px solid #FCD34D;
 }
-.u-badge--operator .u-badge-dot { background: #F59E0B; }
+.u-badge--operator .u-badge-dot { background: var(--bg); }
 
 /* ─────────────────────────────────────────────
    PAGINACIÓN
@@ -533,9 +534,9 @@
 .u-form-field input,
 .u-form-field select {
   padding:       10px 12px;
-  border:        1.5px solid #a9bcc9 !important;
+  border:        1.5px solid var(--border) !important;
   border-radius: var(--radius-sm);
-  background:    #ffffff !important;
+  background:    var(--panel-bg) !important;
   font-family:   var(--font-main);
   font-size:     13.5px;
   color:         var(--text);

@@ -200,6 +200,45 @@ test('parseReportFilters rejects invalid report dates and descending ranges', ()
   );
 });
 
+test('parseReportFilters soporta nuevos reportes profits, comparative, no-movement y by-category', () => {
+  assert.deepEqual(
+    parseReportFilters('profits', {
+      fecha_desde: '2026-05-01',
+      fecha_hasta: '2026-05-15',
+    }),
+    {
+      reportType: 'profits',
+      fecha_desde: '2026-05-01',
+      fecha_hasta: '2026-05-15',
+    }
+  );
+
+  assert.deepEqual(
+    parseReportFilters('comparative', {
+      periodo_actual_desde: '2026-05-01',
+      periodo_actual_hasta: '2026-05-15',
+      periodo_anterior_desde: '2026-04-01',
+      periodo_anterior_hasta: '2026-04-15',
+    }),
+    {
+      reportType: 'comparative',
+      periodo_actual_desde: '2026-05-01',
+      periodo_actual_hasta: '2026-05-15',
+      periodo_anterior_desde: '2026-04-01',
+      periodo_anterior_hasta: '2026-04-15',
+    }
+  );
+
+  assert.deepEqual(parseReportFilters('no-movement', {}), {
+    reportType: 'no-movement',
+    dias: 30,
+  });
+
+  assert.deepEqual(parseReportFilters('by-category', {}), {
+    reportType: 'by-category',
+  });
+});
+
 test('normalizeSalesReason collapses observable sales aliases without breaking other reasons', () => {
   assert.equal(normalizeSalesReason('Venta'), 'venta');
   assert.equal(normalizeSalesReason(' VENTA MOSTRADOR '), 'venta');

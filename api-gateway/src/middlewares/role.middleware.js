@@ -1,8 +1,9 @@
 function requireRoles(allowedRoles) {
   return function roleGuard(req, res, next) {
-    const role = req.authUser?.rol;
+    const role = String(req.authUser?.rol || '').trim().toLowerCase();
+    const rolesLower = allowedRoles.map(r => String(r).trim().toLowerCase());
 
-    if (!allowedRoles.includes(role)) {
+    if (!rolesLower.includes(role)) {
       return res.status(403).json({
         success: false,
         error: {

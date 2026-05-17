@@ -143,6 +143,101 @@ function buildReportContext(
   return { app, repository };
 }
 
+function buildAdvancedReportContext(
+  user = { id_usuario: 1, nombre: 'Admin Demo', rol: 'Administrador' }
+) {
+  const now = new Date();
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const sixtyDaysAgo = new Date(now);
+  sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+
+  const repository = new InMemoryInventoryRepository({
+    products: [
+      {
+        id_producto: 1,
+        nombre: 'Arroz 1Kg',
+        id_categoria: 1,
+        nombre_categoria: 'Granos',
+        precio_compra: 3000,
+        precio_venta: 4500,
+        stock_actual: 25,
+        estado: true,
+      },
+      {
+        id_producto: 2,
+        nombre: 'Azucar 1Kg',
+        id_categoria: 1,
+        nombre_categoria: 'Granos',
+        precio_compra: 2800,
+        precio_venta: 4200,
+        stock_actual: 10,
+        estado: true,
+      },
+      {
+        id_producto: 3,
+        nombre: 'Aceite 1L',
+        id_categoria: 2,
+        nombre_categoria: 'Despensa',
+        precio_compra: 5000,
+        precio_venta: 7000,
+        stock_actual: 8,
+        estado: true,
+      },
+    ],
+    movements: [
+      {
+        id_movimiento: 1,
+        id_producto: 1,
+        cantidad: 10,
+        stock_anterior: 15,
+        stock_posterior: 25,
+        nombre_motivo: 'Compra / Reposicion',
+        tipo_operacion: 'ENTRADA',
+        fecha_hora_exacta: yesterday.toISOString(),
+      },
+      {
+        id_movimiento: 2,
+        id_producto: 1,
+        cantidad: 4,
+        stock_anterior: 29,
+        stock_posterior: 25,
+        nombre_motivo: 'Venta',
+        tipo_operacion: 'SALIDA',
+        fecha_hora_exacta: now.toISOString(),
+      },
+      {
+        id_movimiento: 3,
+        id_producto: 2,
+        cantidad: 2,
+        stock_anterior: 12,
+        stock_posterior: 10,
+        nombre_motivo: 'Venta',
+        tipo_operacion: 'SALIDA',
+        fecha_hora_exacta: now.toISOString(),
+      },
+      {
+        id_movimiento: 4,
+        id_producto: 3,
+        cantidad: 2,
+        stock_anterior: 10,
+        stock_posterior: 8,
+        nombre_motivo: 'Venta',
+        tipo_operacion: 'SALIDA',
+        fecha_hora_exacta: sixtyDaysAgo.toISOString(),
+      },
+    ],
+  });
+
+  const app = createApp({
+    repository,
+    notifier: { notifyMovementRegistered: async () => {} },
+    authMiddleware: createTestAuthMiddleware(user),
+  });
+
+  return { app, repository };
+}
+
 test('POST /api/inventory/movements registra una entrada y actualiza stock de forma atomica', async () => {
   const { app, repository } = buildTestContext();
 
@@ -162,6 +257,59 @@ test('POST /api/inventory/movements registra una entrada y actualiza stock de fo
 
   const product = await repository.getProductById(1);
   assert.equal(product.stock_actual, 15);
+});
+
+test('POST /api/inventory/movements rechaza cantidad decimal cuando el producto no permite fraccion', async () => {
+  const { app, repository } = buildTestContext();
+
+  const response = await request(app).post('/api/inventory/movements').send({
+    id_producto: 1,
+    tipo_movimiento: 'entrada',
+    cantidad: 1.5,
+    id_motivo: 1,
+  });
+
+  assert.equal(response.status, 400);
+  assert.equal(response.body.success, false);
+  assert.equal(
+    response.body.error.message,
+    'Este producto no permite cantidades fraccionadas. Ingrese una cantidad entera.'
+  );
+  assert.equal(repository.movements.length, 0);
+});
+
+test('POST /api/inventory/movements permite cantidad decimal cuando el producto permite fraccion', async () => {
+  const repository = new InMemoryInventoryRepository({
+    products: [
+      {
+        id_producto: 1,
+        nombre: 'Arroz Granel',
+        stock_actual: 10,
+        permite_fraccion: true,
+        estado: true,
+      },
+    ],
+  });
+  const app = createApp({
+    repository,
+    notifier: { notifyMovementRegistered: async () => {} },
+    authMiddleware: createTestAuthMiddleware({
+      id_usuario: 10,
+      nombre: 'Empleado Demo',
+      rol: 'Empleado',
+    }),
+  });
+
+  const response = await request(app).post('/api/inventory/movements').send({
+    id_producto: 1,
+    tipo_movimiento: 'entrada',
+    cantidad: 1.5,
+    id_motivo: 1,
+  });
+
+  assert.equal(response.status, 201);
+  assert.equal(response.body.data.nuevo_stock, 11.5);
+  assert.equal(repository.movements.length, 1);
 });
 
 test('POST /api/inventory/movements rechaza salidas que dejan stock negativo', async () => {
@@ -200,6 +348,51 @@ test('POST /api/inventory/movements bloquea ajustes para usuarios no administrad
 
   assert.equal(response.status, 403);
   assert.equal(response.body.error.code, 'INVENTORY_ADJUSTMENT_FORBIDDEN');
+});
+
+test('POST /api/inventory/movements bloquea ajustes por id_motivo para rol Empleado', async () => {
+  const { app, repository } = buildTestContext({
+    id_usuario: 11,
+    nombre: 'Empleado Prueba',
+    rol: 'Empleado',
+  });
+
+  const response = await request(app).post('/api/inventory/movements').send({
+    id_producto: 1,
+    tipo_movimiento: 'salida',
+    cantidad: 1,
+    id_motivo: 18,
+    motivo: 'Venta',
+  });
+
+  assert.equal(response.status, 403);
+  assert.equal(response.body.success, false);
+  assert.equal(response.body.error.code, 'INVENTORY_ADJUSTMENT_FORBIDDEN');
+  assert.equal(
+    response.body.error.message,
+    'Solo el administrador puede registrar ajustes de inventario.'
+  );
+  assert.equal(repository.movements.length, 0);
+});
+
+test('POST /api/inventory/movements persiste id_factura cuando se envia en el body', async () => {
+  const { app, repository } = buildTestContext({
+    id_usuario: 1,
+    nombre: 'Administrador',
+    rol: 'Administrador',
+  });
+
+  const response = await request(app).post('/api/inventory/movements').send({
+    id_producto: 1,
+    tipo_movimiento: 'entrada',
+    cantidad: 2,
+    id_motivo: 1,
+    id_factura: 99,
+  });
+
+  assert.equal(response.status, 201);
+  assert.equal(response.body.data.id_factura, 99);
+  assert.equal(repository.movements[0].id_factura, 99);
 });
 
 test('POST /api/inventory/movements responde 404 si el proveedor no existe', async () => {
@@ -530,11 +723,127 @@ test('GET /api/inventory/reports/:reportType devuelve payload uniforme para move
     assert.equal(typeof response.body.data.meta.generatedAt, 'string');
     assert.ok(Array.isArray(response.body.data.columns));
     assert.ok(Array.isArray(response.body.data.items));
+    assert.equal(typeof response.body.data.resumen_narrativo, 'string');
   }
 
   assert.equal(movementsResponse.body.data.meta.reportType, 'movements');
   assert.equal(salesResponse.body.data.meta.reportType, 'sales');
   assert.equal(stockResponse.body.data.meta.reportType, 'stock');
+});
+
+test('GET /api/inventory/reports/profits calcula metricas y narrativa para Administrador', async () => {
+  const { app } = buildAdvancedReportContext({
+    id_usuario: 1,
+    nombre: 'Administrador',
+    rol: 'Administrador',
+  });
+
+  const today = new Date().toISOString().slice(0, 10);
+  const from = new Date();
+  from.setDate(from.getDate() - 2);
+  const fromDate = from.toISOString().slice(0, 10);
+
+  const response = await request(app)
+    .get('/api/inventory/reports/profits')
+    .query({ fecha_desde: fromDate, fecha_hasta: today });
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.success, true);
+  assert.equal(response.body.data.fecha_desde, fromDate);
+  assert.equal(response.body.data.fecha_hasta, today);
+  assert.equal(response.body.data.total_ingresos, 26400);
+  assert.equal(response.body.data.costo, 30000);
+  assert.equal(response.body.data.ganancia_bruta, -3600);
+  assert.equal(typeof response.body.data.margen_porcentual, 'number');
+  assert.match(response.body.data.resumen_narrativo, /Durante el período del/);
+});
+
+test('GET /api/inventory/reports/profits devuelve 403 para Empleado', async () => {
+  const { app } = buildAdvancedReportContext({
+    id_usuario: 2,
+    nombre: 'Empleado Demo',
+    rol: 'Empleado',
+  });
+
+  const today = new Date().toISOString().slice(0, 10);
+  const from = new Date();
+  from.setDate(from.getDate() - 2);
+  const fromDate = from.toISOString().slice(0, 10);
+
+  const response = await request(app)
+    .get('/api/inventory/reports/profits')
+    .query({ fecha_desde: fromDate, fecha_hasta: today });
+
+  assert.equal(response.status, 403);
+  assert.equal(response.body.success, false);
+  assert.equal(response.body.error.code, 'REPORT_FORBIDDEN');
+});
+
+test('GET /api/inventory/reports/comparative compara dos periodos para Administrador', async () => {
+  const { app } = buildAdvancedReportContext({
+    id_usuario: 1,
+    nombre: 'Administrador',
+    rol: 'Administrador',
+  });
+
+  const today = new Date();
+  const actualDesde = new Date(today);
+  actualDesde.setDate(today.getDate() - 2);
+  const actualHasta = new Date(today);
+  const anteriorDesde = new Date(today);
+  anteriorDesde.setDate(today.getDate() - 70);
+  const anteriorHasta = new Date(today);
+  anteriorHasta.setDate(today.getDate() - 50);
+
+  const response = await request(app)
+    .get('/api/inventory/reports/comparative')
+    .query({
+      periodo_actual_desde: actualDesde.toISOString().slice(0, 10),
+      periodo_actual_hasta: actualHasta.toISOString().slice(0, 10),
+      periodo_anterior_desde: anteriorDesde.toISOString().slice(0, 10),
+      periodo_anterior_hasta: anteriorHasta.toISOString().slice(0, 10),
+    });
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.success, true);
+  assert.equal(typeof response.body.data.indicadores.total_movimientos.variacion_porcentual, 'number');
+  assert.equal(typeof response.body.data.indicadores.valor_inventario_cierre.periodo_actual, 'number');
+  assert.match(response.body.data.resumen_narrativo, /Comparando/);
+});
+
+test('GET /api/inventory/reports/no-movement retorna productos sin movimientos recientes', async () => {
+  const { app } = buildAdvancedReportContext({
+    id_usuario: 2,
+    nombre: 'Empleado Demo',
+    rol: 'Empleado',
+  });
+
+  const response = await request(app)
+    .get('/api/inventory/reports/no-movement')
+    .query({ dias: 30 });
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.success, true);
+  assert.equal(response.body.data.dias, 30);
+  assert.ok(Array.isArray(response.body.data.items));
+  assert.equal(response.body.data.items.some((item) => item.id_producto === 3), true);
+  assert.match(response.body.data.resumen_narrativo, /sin movimientos/);
+});
+
+test('GET /api/inventory/reports/by-category retorna consolidado por categoria activa', async () => {
+  const { app } = buildAdvancedReportContext({
+    id_usuario: 2,
+    nombre: 'Empleado Demo',
+    rol: 'Empleado',
+  });
+
+  const response = await request(app).get('/api/inventory/reports/by-category');
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.success, true);
+  assert.ok(Array.isArray(response.body.data.items));
+  assert.equal(response.body.data.items.length >= 2, true);
+  assert.match(response.body.data.resumen_narrativo, /categorías activas/i);
 });
 
 test('GET /api/inventory/reports/unknown responde 404 para tipos de reporte no soportados', async () => {
