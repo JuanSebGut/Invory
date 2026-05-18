@@ -16,7 +16,7 @@ Este módulo gestiona el acceso al sistema, roles y configuraciones generales.
 - **`roles_permisos`**: Tabla intermedia que asocia roles con múltiples permisos.
   - *Atributos*: `id_rol` (FK), `id_permiso` (FK).
 - **`configuracion_sistema`**: Parámetros globales y comportamiento de módulos.
-  - *Atributos*: `id_parametro` (PK), `nombre_tienda`, `moneda`, `stock_minimo_default`, `stock_maximo_default`, `modulo_clientes_activo`, `modulo_fiados_activo`.
+  - *Atributos*: `id_parametro` (PK), `nombre_tienda`, `moneda`, `stock_minimo_default`, `stock_maximo_default`, `prefijo_codigo_barras`, `modulo_clientes_activo`, `modulo_fiados_activo`.
 - **`parametros_sistema`**: Parámetros dinámicos en formato clave-valor.
   - *Atributos*: `clave` (PK), `valor`, `updated_at`.
 
@@ -43,7 +43,7 @@ Rastrea cada alteración de stock y acciones sensibles en el sistema.
 
 ### Tablas:
 - **`movimientos_inventario`**: Registro histórico inmutable de entradas y salidas.
-  - *Atributos*: `id_movimiento` (PK), `id_producto` (FK), `id_usuario` (FK), `id_motivo` (FK), `id_proveedor` (FK), `id_factura` (FK)*, `cantidad`, `stock_anterior`, `stock_posterior`, `monto_pagado`, `fecha_hora_exacta`.
+  - *Atributos*: `id_movimiento` (PK), `id_producto` (FK), `id_usuario` (FK), `id_motivo` (FK), `id_proveedor` (FK), `id_factura` (FK)*, `numero_factura`, `cantidad`, `stock_anterior`, `stock_posterior`, `monto_pagado`, `comentarios`, `fecha_hora_exacta`.
   *(Nota: El campo `id_factura` no era parte del diseño original, fue agregado posteriormente en la actualización de facturación).*
 - **`motivos_movimiento`**: Define la naturaleza del movimiento.
   - *Atributos*: `id_motivo` (PK), `nombre_motivo`, `tipo_operacion` (ENUM: `ENTRADA`, `SALIDA`, `AJUSTE`).
@@ -55,7 +55,7 @@ Rastrea cada alteración de stock y acciones sensibles en el sistema.
   - *Atributos*: `id_exportacion` (PK), `tipo_reporte`, `formato`, `fecha_generacion`, `usuario_generador` (FK), `ruta_archivo`.
 
 ### Vistas Materializadas o de Consulta:
-- **`vista_movimientos_export` y `vista_productos_export`**: Vistas pre-calculadas en base de datos diseñadas para optimizar la extracción masiva de datos utilizada por el Export Service.
+- **`vista_movimientos_export` y `vista_productos_export`**: Vistas pre-calculadas en base de datos diseñadas para optimizar la extracción masiva de datos utilizada por el Export Service. *(Aviso: `vista_movimientos_export` fue definida en la versión inicial y no incluye el campo `monto_pagado` añadido en parches posteriores; esto debe revisarse si el Export Service requiere este campo).*
 
 ## 4. Módulo de Clientes, Ventas y Fiados
 
@@ -63,9 +63,9 @@ Gestión comercial del negocio, incluyendo facturación y créditos. El flujo de
 
 ### Tablas:
 - **`clientes`**: Directorio de clientes del negocio.
-  - *Atributos*: `id_cliente` (PK), `nombre`, `documento`, `telefono`, `direccion`, `correo`, `estado`.
+  - *Atributos*: `id_cliente` (PK), `nombre`, `documento`, `telefono`, `direccion`, `correo`, `fecha_creacion`, `estado`.
 - **`facturas`**: Cabecera de las transacciones comerciales (ventas, devoluciones).
-  - *Atributos*: `id_factura` (PK), `numero_factura`, `id_usuario` (FK), `id_cliente` (FK), `fecha_emision`, `subtotal`, `descuento`, `total`, `estado`, `tipo`.
+  - *Atributos*: `id_factura` (PK), `numero_factura`, `id_usuario` (FK), `id_cliente` (FK), `fecha_emision`, `subtotal`, `descuento`, `total`, `estado`, `tipo`, `observaciones`.
 - **`facturas_detalle`**: Líneas de artículos dentro de una factura.
   - *Atributos*: `id_detalle` (PK), `id_factura` (FK), `id_producto` (FK), `cantidad`, `precio_unitario`, `subtotal`.
 - **`fiados`**: Registro de ventas a crédito (Cuentas por cobrar).
@@ -77,6 +77,6 @@ Gestión comercial del negocio, incluyendo facturación y créditos. El flujo de
 
 ## Triggers y Funciones Relevantes (Lógica de Negocio)
 
-1. **`actualizar_stock()`**: Trigger que se ejecuta al insertar un registro en `movimientos_inventario`. Automáticamente calcula el `stock_posterior` basado en el `stock_anterior` y la cantidad, validando la `tipo_operacion` (Entrada/Salida) e impidiendo stocks negativos mediante Excepciones. Actualiza el `stock_actual` en la tabla `productos`.
+1. **`actualizar_stock()`**: Trigger que se ejecuta al insertar un registro en `movimientos_inventario`. Automáticamente calcula el `stock_posterior` basado en el `stock_anterior` y la cantidad, evaluando la `tipo_operacion`. Para `ENTRADA` suma, para `SALIDA` resta, y para `AJUSTE` implementa una lógica condicional específica: si el nombre del motivo contiene la palabra "sobrante" suma al stock, de lo contrario resta (merma). Impide stocks negativos mediante Excepciones y actualiza el `stock_actual` en la tabla `productos`.
 2. **`evitar_delete_movimientos()`**: Trigger restrictivo que prohíbe la eliminación de cualquier registro en la tabla `movimientos_inventario` para asegurar la inmutabilidad contable del sistema.
 3. **Campos Calculados**: En la tabla `fiados`, el campo `saldo_pendiente` es generado automáticamente de forma persistente (`GENERATED ALWAYS AS (monto_total - monto_pagado) STORED`).

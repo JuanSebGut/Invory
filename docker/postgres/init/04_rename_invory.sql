@@ -1,3 +1,5 @@
-UPDATE public.usuarios
-SET correo = 'admin@invory.com'
-WHERE correo = 'admin@invory.com';
+-- DEPRECADO: Este script fue un parche de migración para corregir el correo inicial.
+-- Actualmente es una operación no-op y se mantiene sólo por consistencia del historial de migraciones.
+-- UPDATE public.usuarios
+-- SET correo = 'admin@invory.com'
+-- WHERE correo = 'admin@invory.com';

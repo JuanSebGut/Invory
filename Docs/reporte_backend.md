@@ -97,6 +97,9 @@ El backend emplea un patrón de **Base de Datos Compartida**. Se utiliza un solo
 - **Inicialización (Migraciones):** Al levantar el contenedor por primera vez (Volumen vacío), la base de datos se inicializa leyendo los scripts del directorio interno de Docker (`/docker-entrypoint-initdb.d/`). 
 - **Archivos Claves de Migración:** 
   - `01_backup_invorybd.sql`: Esquema base (tablas core, triggers de inventario).
+  - `02_parametros_sistema.sql`: Crea la tabla `parametros_sistema` y sus seeds.
+  - `03_mejoras_invory.sql`: Agrega la columna `monto_pagado` e índices a los movimientos de inventario.
+  - `04_rename_invory.sql`: Script de corrección de datos (actualmente deprecado/no-op).
   - `05_mejoras_invory.sql`: Nuevos módulos (Unidades de medida, Facturación, Fiados y Clientes).
 - **Inmutabilidad Controlada:** Existen **Triggers** y funciones en base de datos (`evitar_delete_movimientos`) que rechazan forzosamente sentencias `DELETE` desde los servicios, garantizando que el historial contable nunca sea alterado.
 
