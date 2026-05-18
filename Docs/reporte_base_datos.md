@@ -35,6 +35,7 @@ Gestiona el catálogo de productos, sus categorías y unidades de medida.
   - *Atributos*: `id_codigo` (PK), `id_producto` (FK), `codigo`.
 - **`proveedores`**: Entidades que suministran los productos.
   - *Atributos*: `id_proveedor` (PK), `razon_social`, `nit_identificacion`, `telefono`, `direccion`, `correo`, `estado`.
+  - *Relaciones*: Un proveedor se relaciona directamente con los `movimientos_inventario` (Entradas), quedando registrado su `id_proveedor` como llave foránea.
 
 ## 3. Módulo de Movimientos y Auditoría
 
@@ -51,7 +52,7 @@ Rastrea cada alteración de stock y acciones sensibles en el sistema.
 
 ## 4. Módulo de Clientes, Ventas y Fiados
 
-Gestión comercial del negocio, incluyendo facturación y créditos.
+Gestión comercial del negocio, incluyendo facturación y créditos. El flujo de abonos a cuentas por cobrar se registra en la tabla `fiados_pagos`, la cual es alimentada por el servicio de clientes (Client Service) mediante el registro de pagos.
 
 ### Tablas:
 - **`clientes`**: Directorio de clientes del negocio.

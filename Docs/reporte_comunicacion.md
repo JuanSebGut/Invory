@@ -23,10 +23,15 @@ El **API Gateway** (`api-gateway` en el puerto `3000`) es una aplicación Node.j
 ### 3.1. Proceso de Enrutamiento
 Cuando el Gateway recibe una solicitud (ej. `GET /api/products`), evalúa la ruta y actúa como un proxy delegando la petición al microservicio correspondiente a través de la red interna de Docker:
 *   `/api/auth` ➔ **auth-service** (Puerto 3002)
-*   `/api/products` ➔ **product-service** (Puerto 3001)
 *   `/api/users` ➔ **user-service** (Puerto 3004)
+*   `/api/categories` ➔ **category-service** (Puerto 3003)
+*   `/api/products` ➔ **product-service** (Puerto 3001)
+*   `/api/providers` ➔ **supplier-service** (Puerto 3008)
+*   `/api/clients` ➔ **client-service** (Puerto 3009)
+*   `/api/fiados` ➔ **client-service** (Puerto 3009)
 *   `/api/inventory` ➔ **inventory-service** (Puerto 3005)
-*   ... y así sucesivamente para facturas, clientes, auditoría, etc.
+*   `/api/audit` ➔ **audit-service** (Puerto 3006)
+*   `/api/export` ➔ **export-service** (Puerto 3007)
 
 ### 3.2. Middleware de Autenticación (Zero-Trust)
 Antes de redirigir la petición al microservicio destino, el Gateway intercepta las rutas protegidas usando su `authMiddleware`.
@@ -59,4 +64,4 @@ La capa de persistencia se centraliza en un contenedor Docker de **PostgreSQL 16
 2. **API Gateway:** Recibe la petición, verifica el JWT con el `auth-service`. Al confirmar que el usuario es Administrador, enruta la petición hacia `http://product-service:3001/api/products`.
 3. **Product Service (Backend):** Recibe los datos, los valida e inserta el nuevo producto ejecutando un query SQL `INSERT` directamente en el contenedor **PostgreSQL**.
 4. **Auditoría (Webhook):** Inmediatamente después de guardar en la DB, el `product-service` envía un POST al webhook del `audit-service` (`http://audit-service:3006/api/audit/events`) informando "Usuario X creó Producto Y".
-5. **Respuesta:** El `product-service` responde `200 OK` al Gateway, que a su vez se lo reenvía al Frontend para mostrar la notificación de éxito al usuario.
+5. **Respuesta:** El `product-service` responde `201 Created` al Gateway, que a su vez se lo reenvía al Frontend para mostrar la notificación de éxito al usuario.

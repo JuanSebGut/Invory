@@ -47,20 +47,22 @@ Cada petición que entra al Gateway es evaluada. Si la ruta requiere protección
 
 Cada microservicio está construido con **Node.js** y **Express.js**, utilizando el paquete `pg` (Postgres) puro, sin un ORM (como Prisma o TypeORM), lo que permite mayor rendimiento y control sobre sentencias complejas de SQL.
 
-1. **Auth Service (`MS-01`):** 
+*Nota: La numeración lógica de los microservicios (`MS-XX`) corresponde al orden de diseño arquitectónico y no a la asignación de puertos, la cual fue asignada dinámicamente según la disponibilidad de la red interna.*
+
+1. **Auth Service (`MS-01` / Puerto 3002):** 
    - **Misión:** Creador y verificador de JWT y gestor de sesiones de la aplicación.
    - **Mecanismos y Controladores:** Expone rutas vitales como `/login`, `/logout`, `/refresh` y `/verify`.
    - **Seguridad Interna:** Encripta contraseñas usando `bcryptjs`. Implementa un sistema de protección contra ataques de fuerza bruta, limitando fallos consecutivos (`MAX_LOGIN_ATTEMPTS=3`) y congelando la cuenta del usuario (`LOCK_TIME_MINUTES=15`). Envía eventos de auditoría (webhook) para registrar cada intento de login (exitoso o fallido).
 
-2. **User Service (`MS-02`):**
+2. **User Service (`MS-02` / Puerto 3004):**
    - **Misión:** Administración del ciclo de vida de los usuarios y RBAC (Role-Based Access Control).
    - **Funcionamiento:** Separado de Auth Service para mantener la regla de responsabilidad única (lectura/sesión vs gestión/escritura). Expone el CRUD completo de usuarios, solo accesible por el Administrador.
 
-3. **Product & Category Services (`MS-03`, `MS-04`):**
+3. **Product & Category Services (`MS-03` / Puerto 3001, `MS-04` / Puerto 3003):**
    - **Misión:** Gestión del catálogo de artículos.
    - **Funcionamiento:** Product Service expone el CRUD de productos y administra los metadatos (precios, códigos de barras, unidades de medida y márgenes de stock). Category Service actúa como soporte jerárquico. Ambos envían webhooks a auditoría ante cualquier cambio crítico en catálogos y precios.
 
-4. **Inventory Service (`MS-05` y MS-06/MS-09 integrados):**
+4. **Inventory Service (`MS-05` / Puerto 3005):**
    - **Misión:** El motor transaccional del sistema. Controla la lógica de negocios sobre movimientos, reportes financieros y alertas de inventario.
    - **Endpoints Internos:**
      - **Movimientos:** `registerMovement`, `listMovements` (Control de Entradas, Salidas y Ajustes forzados).
@@ -69,22 +71,23 @@ Cada microservicio está construido con **Node.js** y **Express.js**, utilizando
      - **Alertas de Stock:** Expone alertas de bajo stock (`getAlerts`) basándose en los límites configurados en MS-03.
    - **Lógica Fuerte:** Valida que las salidas no dejen el stock en negativo a menos que el rol sea "Administrador" (override). 
 
-5. **Client Service (`MS-11` - *Módulo de Cartera y Clientes*):**
+5. **Audit Service (`MS-06` / Puerto 3006):**
+   - **Misión:** Registro forense inmutable de todas las operaciones trazables.
+   - **Funcionamiento:** Trabaja 100% bajo un modelo de eventos *Webhook* asincrónico. Cuando `inventory-service` o `client-service` mutan un registro, disparan una petición HTTP (fire-and-forget) hacia el Audit Service enviando `entidad`, `accion` y los `campos_modificados`. El usuario Administrador puede consultar este log vía `/api/audit/logs`.
+
+6. **Export Service (`MS-07` / Puerto 3007):**
+   - **Misión:** Generación síncrona de archivos binarios (Data export).
+   - **Funcionamiento:** Recibe solicitudes HTTP para construir un documento. Actúa como un *Aggregator*, solicitando de forma interna a `inventory-service` y `audit-service` la información para luego empaquetarla en archivos de reporte (PDF/Excel) de forma centralizada sin sobrecargar la memoria de los otros servicios lógicos.
+
+7. **Supplier Service (`MS-08` / Puerto 3008):**
+   - **Misión:** Directorio de proveedores para relacionarlos con las "Entradas" en `Inventory Service` y la conciliación de inventario con compras a terceros.
+   - **Funcionamiento:** Administra el CRUD completo de proveedores. Expone endpoints para el registro y la vinculación de estos con la adquisición de mercancía, facilitando la trazabilidad de orígenes de productos en el inventario.
+
+8. **Client Service (`MS-09` / Puerto 3009 - *Módulo de Cartera y Clientes*):**
    - **Misión:** Controlar el directorio de clientes y el crédito interno.
    - **Endpoints Internos:**
      - **CRUD Clientes:** `listClients`, `createClient`, `updateClient`, `patchClientStatus`. Valida normalización de estados (activos/inactivos).
      - **Fiados (Cuentas por cobrar):** Expone `createClientFiado` (Genera una nueva deuda vinculada a una factura), `listFiadosByClient`, `registerFiadoPayment` (Registra abonos a la deuda) y `getFiadosAlerts` (Alerta sobre cuentas por cobrar vencidas).
-
-6. **Audit Service (`MS-09`):**
-   - **Misión:** Registro forense inmutable de todas las operaciones trazables.
-   - **Funcionamiento:** Trabaja 100% bajo un modelo de eventos *Webhook* asincrónico. Cuando `inventory-service` o `client-service` mutan un registro, disparan una petición HTTP (fire-and-forget) hacia el Audit Service enviando `entidad`, `accion` y los `campos_modificados`. El usuario Administrador puede consultar este log vía `/api/audit/logs`.
-
-7. **Export Service (`MS-12`):**
-   - **Misión:** Generación síncrona de archivos binarios (Data export).
-   - **Funcionamiento:** Recibe solicitudes HTTP para construir un documento. Actúa como un *Aggregator*, solicitando de forma interna a `inventory-service` y `audit-service` la información para luego empaquetarla en archivos de reporte (PDF/Excel) de forma centralizada sin sobrecargar la memoria de los otros servicios lógicos.
-
-8. **Supplier Service:**
-   - **Misión:** Directorio de proveedores para relacionarlos con las "Entradas" en `Inventory Service` y la conciliación de inventario con compras a terceros.
 
 ---
 
