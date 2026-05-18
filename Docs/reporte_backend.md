@@ -30,12 +30,12 @@ Cada petición que entra al Gateway es evaluada. Si la ruta requiere protección
 | :--- | :--- | :--- | :--- |
 | **Autenticación** | `/api/auth` | `auth-service` (3002) | Público (Login) / Protegido (Logout, Refresh) |
 | **Usuarios** | `/api/users` | `user-service` (3004) | Solo Administrador |
-| **Categorías** | `/api/categories` | `category-service` (3003) | Administrador (CRUD) y Operador (Solo Lectura) |
-| **Productos** | `/api/products` | `product-service` (3001) | Administrador y Operador (Empleado) |
+| **Categorías** | `/api/categories` | `category-service` (3003) | Administrador (CRUD) y Empleado (Solo Lectura) |
+| **Productos** | `/api/products` | `product-service` (3001) | Administrador y Empleado |
 | **Proveedores** | `/api/providers` | `supplier-service` (3008) | Solo Administrador |
-| **Clientes** | `/api/clients` | `client-service` (3009) | Administrador y Operador |
-| **Fiados (Cuentas)** | `/api/fiados` | `client-service` (3009) | Administrador y Operador |
-| **Inventario** | `/api/inventory` | `inventory-service` (3005) | Administrador y Operador |
+| **Clientes** | `/api/clients` | `client-service` (3009) | Administrador y Empleado |
+| **Fiados (Cuentas)** | `/api/fiados` | `client-service` (3009) | Administrador y Empleado |
+| **Inventario** | `/api/inventory` | `inventory-service` (3005) | Administrador y Empleado |
 | **Auditoría** | `/api/audit` | `audit-service` (3006) | Solo Administrador |
 | **Exportación** | `/api/export` | `export-service` (3007) | Solo Administrador |
 

@@ -26,7 +26,7 @@ Gestiona el catálogo de productos, sus categorías y unidades de medida.
 
 ### Tablas:
 - **`productos`**: Entidad central del inventario.
-  - *Atributos*: `id_producto` (PK), `id_categoria` (FK), `id_unidad` (FK), `codigo_barras_unico`, `nombre`, `precio_compra`, `precio_venta`, `stock_actual`, `stock_minimo`, `stock_maximo`, `permite_fraccion`, `estado`.
+  - *Atributos*: `id_producto` (PK), `id_categoria` (FK), `id_unidad` (FK), `codigo_barras_unico`, `nombre`, `descripcion`, `precio_compra`, `precio_venta`, `stock_actual`, `stock_minimo`, `stock_maximo`, `permite_fraccion`, `fecha_vencimiento`, `ubicacion`, `estado`.
 - **`categorias`**: Agrupación de productos.
   - *Atributos*: `id_categoria` (PK), `nombre_categoria`, `descripcion`, `estado`.
 - **`unidades_medida`**: Define cómo se miden los productos (peso, volumen, unidad).
@@ -43,12 +43,19 @@ Rastrea cada alteración de stock y acciones sensibles en el sistema.
 
 ### Tablas:
 - **`movimientos_inventario`**: Registro histórico inmutable de entradas y salidas.
-  - *Atributos*: `id_movimiento` (PK), `id_producto` (FK), `id_usuario` (FK), `id_motivo` (FK), `id_proveedor` (FK), `id_factura` (FK), `cantidad`, `stock_anterior`, `stock_posterior`, `fecha_hora_exacta`.
+  - *Atributos*: `id_movimiento` (PK), `id_producto` (FK), `id_usuario` (FK), `id_motivo` (FK), `id_proveedor` (FK), `id_factura` (FK)*, `cantidad`, `stock_anterior`, `stock_posterior`, `monto_pagado`, `fecha_hora_exacta`.
+  *(Nota: El campo `id_factura` no era parte del diseño original, fue agregado posteriormente en la actualización de facturación).*
 - **`motivos_movimiento`**: Define la naturaleza del movimiento.
   - *Atributos*: `id_motivo` (PK), `nombre_motivo`, `tipo_operacion` (ENUM: `ENTRADA`, `SALIDA`, `AJUSTE`).
 - **`ajustes_inventario`**: Registro específico de mermas o sobrantes.
-  - *Atributos*: `id_ajuste` (PK), `id_usuario` (FK), `id_producto` (FK), `cantidad`, `tipo_ajuste`, `fecha`.
-- **`auditoria_operaciones` y `auditoria_detalles`**: Registran quién, cuándo y qué campos específicos fueron modificados en el sistema para trazabilidad.
+  - *Atributos*: `id_ajuste` (PK), `id_usuario` (FK), `id_producto` (FK), `cantidad`, `tipo_ajuste`, `motivo`, `fecha`.
+- **`acciones_auditoria`**: Catálogo de tipos de acciones rastreables en el sistema.
+- **`auditoria_operaciones` y `auditoria_detalles`**: Registran quién, cuándo y qué campos específicos fueron modificados en el sistema para trazabilidad, referenciando a `acciones_auditoria`.
+- **`exportaciones_reportes`**: Almacena el registro de los reportes generados.
+  - *Atributos*: `id_exportacion` (PK), `tipo_reporte`, `formato`, `fecha_generacion`, `usuario_generador` (FK), `ruta_archivo`.
+
+### Vistas Materializadas o de Consulta:
+- **`vista_movimientos_export` y `vista_productos_export`**: Vistas pre-calculadas en base de datos diseñadas para optimizar la extracción masiva de datos utilizada por el Export Service.
 
 ## 4. Módulo de Clientes, Ventas y Fiados
 
@@ -62,9 +69,9 @@ Gestión comercial del negocio, incluyendo facturación y créditos. El flujo de
 - **`facturas_detalle`**: Líneas de artículos dentro de una factura.
   - *Atributos*: `id_detalle` (PK), `id_factura` (FK), `id_producto` (FK), `cantidad`, `precio_unitario`, `subtotal`.
 - **`fiados`**: Registro de ventas a crédito (Cuentas por cobrar).
-  - *Atributos*: `id_fiado` (PK), `id_cliente` (FK), `id_usuario` (FK), `id_factura` (FK), `monto_total`, `monto_pagado`, `saldo_pendiente` (Campo Calculado), `fecha_pago_acordada`, `estado` (`pendiente`, `pagado`, `vencido`).
+  - *Atributos*: `id_fiado` (PK), `id_cliente` (FK), `id_usuario` (FK), `id_factura` (FK), `monto_total`, `monto_pagado`, `saldo_pendiente` (Campo Calculado), `fecha_fiado`, `fecha_pago_acordada`, `estado` (`pendiente`, `pagado`, `vencido`), `observaciones`.
 - **`fiados_pagos`**: Abonos realizados a las cuentas por cobrar.
-  - *Atributos*: `id_pago` (PK), `id_fiado` (FK), `id_usuario` (FK), `monto`, `fecha_pago`.
+  - *Atributos*: `id_pago` (PK), `id_fiado` (FK), `id_usuario` (FK), `monto`, `fecha_pago`, `observaciones`.
 
 ---
 

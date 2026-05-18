@@ -1,6 +1,6 @@
 --
 -- Tabla de parÃ¡metros del sistema (clave-valor)
--- Creada para MS-11 Config Service
+-- Creada para almacenar configuraciones globales del sistema
 -- Se ejecuta despuÃ©s de 01_backup_invorybd.sql
 --
 
