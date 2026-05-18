@@ -26,7 +26,7 @@ Gestiona el catálogo de productos, sus categorías y unidades de medida.
 
 ### Tablas:
 - **`productos`**: Entidad central del inventario.
-  - *Atributos*: `id_producto` (PK), `id_categoria` (FK), `id_unidad` (FK), `codigo_barras_unico`, `nombre`, `descripcion`, `precio_compra`, `precio_venta`, `stock_actual`, `stock_minimo`, `stock_maximo`, `permite_fraccion`, `fecha_vencimiento`, `ubicacion`, `estado`.
+  - *Atributos*: `id_producto` (PK), `id_categoria` (FK), `id_unidad` (FK), `codigo_barras_unico`, `nombre`, `descripcion`, `precio_compra`, `precio_venta`, `stock_actual`, `stock_minimo`, `stock_maximo`, `permite_fraccion`, `fecha_vencimiento`, `ubicacion`, `fecha_creacion`, `estado`.
 - **`categorias`**: Agrupación de productos.
   - *Atributos*: `id_categoria` (PK), `nombre_categoria`, `descripcion`, `estado`.
 - **`unidades_medida`**: Define cómo se miden los productos (peso, volumen, unidad).
@@ -47,6 +47,7 @@ Rastrea cada alteración de stock y acciones sensibles en el sistema.
   *(Nota: El campo `id_factura` no era parte del diseño original, fue agregado posteriormente en la actualización de facturación).*
 - **`motivos_movimiento`**: Define la naturaleza del movimiento.
   - *Atributos*: `id_motivo` (PK), `nombre_motivo`, `tipo_operacion` (ENUM: `ENTRADA`, `SALIDA`, `AJUSTE`).
+  *(Nota técnica de datos: El script inicial de base de datos (`01`) siembra los motivos duplicados accidentalmente, generando que los IDs 12-22 y 23-33 sean idénticos en nombre y tipo. Esto es un problema de calidad de datos que debe considerarse si algún servicio hace agrupaciones por nombre de motivo).*
 - **`ajustes_inventario`**: Registro específico de mermas o sobrantes.
   - *Atributos*: `id_ajuste` (PK), `id_usuario` (FK), `id_producto` (FK), `cantidad`, `tipo_ajuste`, `motivo`, `fecha`.
 - **`acciones_auditoria`**: Catálogo de tipos de acciones rastreables en el sistema.
