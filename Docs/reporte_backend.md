@@ -30,9 +30,9 @@ Cada petición que entra al Gateway es evaluada. Si la ruta requiere protección
 | :--- | :--- | :--- | :--- |
 | **Autenticación** | `/api/auth` | `auth-service` (3002) | Público (Login) / Protegido (Logout, Refresh) |
 | **Usuarios** | `/api/users` | `user-service` (3004) | Solo Administrador |
-| **Categorías** | `/api/categories` | `category-service` (3003) | Administrador y Operador (Empleado) |
+| **Categorías** | `/api/categories` | `category-service` (3003) | Administrador (CRUD) y Operador (Solo Lectura) |
 | **Productos** | `/api/products` | `product-service` (3001) | Administrador y Operador (Empleado) |
-| **Proveedores** | `/api/providers` | `supplier-service` (3008) | Administrador y Operador |
+| **Proveedores** | `/api/providers` | `supplier-service` (3008) | Solo Administrador |
 | **Clientes** | `/api/clients` | `client-service` (3009) | Administrador y Operador |
 | **Fiados (Cuentas)** | `/api/fiados` | `client-service` (3009) | Administrador y Operador |
 | **Inventario** | `/api/inventory` | `inventory-service` (3005) | Administrador y Operador |
@@ -77,7 +77,7 @@ Cada microservicio está construido con **Node.js** y **Express.js**, utilizando
 
 6. **Export Service (`MS-07` / Puerto 3007):**
    - **Misión:** Generación síncrona de archivos binarios (Data export).
-   - **Funcionamiento:** Recibe solicitudes HTTP para construir un documento. Actúa como un *Aggregator*, solicitando de forma interna a `inventory-service` y `audit-service` la información para luego empaquetarla en archivos de reporte (PDF/Excel) de forma centralizada sin sobrecargar la memoria de los otros servicios lógicos.
+   - **Funcionamiento:** Recibe solicitudes HTTP para construir un documento. Actúa como un *Aggregator*, solicitando de forma interna a `inventory-service` y `audit-service` la información para luego empaquetarla en archivos de reporte (PDF/Excel) de forma centralizada sin sobrecargar la memoria de los otros servicios lógicos. *(Nota: La vista en pantalla de los "Reportes" del frontend la procesa el Inventory Service y es accesible a Empleados, pero la exportación final de estos en archivos pasa estrictamente por este servicio, el cual está restringido solo a Administradores).*
 
 7. **Supplier Service (`MS-08` / Puerto 3008):**
    - **Misión:** Directorio de proveedores para relacionarlos con las "Entradas" en `Inventory Service` y la conciliación de inventario con compras a terceros.
