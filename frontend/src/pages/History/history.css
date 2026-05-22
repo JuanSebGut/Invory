@@ -21,22 +21,56 @@
   border-radius: 16px;
   box-shadow: var(--shadow-sm);
   background: var(--panel-bg);
-  padding: 12px;
+  padding: 20px;
+  overflow: hidden;
 }
 
 .history-filters {
   display: grid;
-  grid-template-columns: repeat(6, minmax(120px, 1fr));
-  gap: 8px;
-  margin-bottom: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 18px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg);
 }
 
 .history-filters input,
-.history-filters select,
-.history-filters button {
+.history-filters select {
+  width: 100%;
   border: 1px solid var(--line);
   border-radius: 8px;
-  padding: 8px 10px;
+  padding: 9px 12px;
+  background: var(--panel-bg);
+  color: var(--text-h);
+  font: inherit;
+  min-height: 38px;
+}
+
+.history-filters button {
+  justify-self: start;
+  min-height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 9px 16px;
+  background: var(--bg-surface-elevated);
+  color: var(--text-h);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.history-filters button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.history-table-scroll {
+  overflow-x: auto;
+  padding-bottom: 2px;
 }
 
 .mov-pos { color: #0f9d58; font-weight: 700; }

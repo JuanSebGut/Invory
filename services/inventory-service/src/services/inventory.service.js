@@ -211,7 +211,7 @@ const REPORT_COLUMNS = Object.freeze({
   [REPORT_TYPES.MOVEMENTS]: [
     { key: 'fecha', label: 'Fecha' },
     { key: 'producto', label: 'Producto' },
-    { key: 'categoria', label: 'CategorÃƒÂ­a' },
+    { key: 'categoria', label: 'Categoria' },
     { key: 'tipo', label: 'Tipo' },
     { key: 'motivo', label: 'Motivo' },
     { key: 'cantidad', label: 'Cantidad' },
@@ -222,7 +222,7 @@ const REPORT_COLUMNS = Object.freeze({
   [REPORT_TYPES.SALES]: [
     { key: 'fecha', label: 'Fecha' },
     { key: 'producto', label: 'Producto' },
-    { key: 'categoria', label: 'CategorÃƒÂ­a' },
+    { key: 'categoria', label: 'Categoria' },
     { key: 'cantidad', label: 'Cantidad' },
     { key: 'precio_unitario', label: 'Precio venta' },
     { key: 'costo_unitario', label: 'Costo unitario' },
@@ -234,7 +234,7 @@ const REPORT_COLUMNS = Object.freeze({
   ],
   [REPORT_TYPES.STOCK]: [
     { key: 'producto', label: 'Producto' },
-    { key: 'categoria', label: 'CategorÃƒÂ­a' },
+    { key: 'categoria', label: 'Categoria' },
     { key: 'cantidad', label: 'Stock actual' },
     { key: 'precio_unitario', label: 'Precio unitario' },
     { key: 'valor_total', label: 'Valor inventario' },

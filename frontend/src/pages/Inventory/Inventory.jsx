@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { registrarMovimiento, getProductos } from '../../api/inventory.js'
 import { getProveedoresActivos } from '../../api/providers.js'
 import { getClients } from '../../api/clients.js'
-import { createInvoice } from '../../api/invoices.js'
+import { createInvoice, getInvoices } from '../../api/invoices.js'
 import { createFiado, registerPago } from '../../api/fiados.js'
 import { generarNumeroFactura } from '../../utils/factura.js'
 import './inventory.css'
@@ -73,6 +73,27 @@ function getUnitLabel(product) {
   return `${nombre}${abreviatura}`
 }
 
+function buildNextInvoiceNumber(lastNumber) {
+  const currentYear = new Date().getFullYear()
+  const fallback = `FAC-${currentYear}-0001`
+  const raw = String(lastNumber || '').trim()
+  const match = raw.match(/^([A-Z]+)-(\d{4})-(\d+)$/)
+  if (!match) return fallback
+
+  const [, prefix, year, seqRaw] = match
+  const seq = Number(seqRaw)
+  if (!Number.isFinite(seq)) return fallback
+  return `${prefix}-${year}-${String(seq + 1).padStart(seqRaw.length, '0')}`
+}
+
+function buildInitialFormForTipo(tipo) {
+  return {
+    ...INITIAL_FORM,
+    numero_factura: generarNumeroFactura(tipo),
+    motivo: tipo === 'salida' ? 'venta' : INITIAL_FORM.motivo,
+  }
+}
+
 export default function Inventory() {
   const { user } = useAuth()
   const isAdmin = user?.rol === 'Administrador'
@@ -83,12 +104,18 @@ export default function Inventory() {
   const [productosLoad, setProductosLoad] = useState(true)
 
   const [tipoMovimiento, setTipoMovimiento] = useState('entrada')
-  const [form, setForm] = useState({ ...INITIAL_FORM, numero_factura: generarNumeroFactura('entrada') })
+  const [form, setForm] = useState(buildInitialFormForTipo('entrada'))
   const [lineasVenta, setLineasVenta] = useState([{ id_producto: '', cantidad: 1, precio_venta: 0 }])
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [resultado, setResultado] = useState(null)
+  const [nextInvoiceNumber, setNextInvoiceNumber] = useState('')
+  const isVenta = tipoMovimiento === 'salida' && form.motivo === 'venta'
+  const isDevolucionProveedor = tipoMovimiento === 'salida' && form.motivo === 'devolucion'
+  const isDevolucionCliente = tipoMovimiento === 'entrada' && form.motivo_entrada === 'devolucion'
+  const usaFacturaComercial = isVenta || isDevolucionCliente
+  const isMultiProduct = isVenta || isDevolucionProveedor || isDevolucionCliente
 
   useEffect(() => {
     async function loadProductos() {
@@ -129,10 +156,29 @@ export default function Inventory() {
     loadClientes()
   }, [])
 
-  const isVenta = tipoMovimiento === 'salida' && form.motivo === 'venta'
-  const isDevolucionProveedor = tipoMovimiento === 'salida' && form.motivo === 'devolucion'
-  const isDevolucionCliente = tipoMovimiento === 'entrada' && form.motivo_entrada === 'devolucion'
-  const isMultiProduct = isVenta || isDevolucionProveedor || isDevolucionCliente
+  useEffect(() => {
+    if (!usaFacturaComercial) {
+      setNextInvoiceNumber('')
+      return
+    }
+
+    let cancelled = false
+    async function loadNextInvoiceNumber() {
+      try {
+        const data = await getInvoices({ page: 1, size: 1 })
+        const lastInvoice = data?.items?.[0]
+        const next = buildNextInvoiceNumber(lastInvoice?.numero_factura)
+        if (!cancelled) setNextInvoiceNumber(next)
+      } catch {
+        if (!cancelled) setNextInvoiceNumber(buildNextInvoiceNumber(''))
+      }
+    }
+
+    loadNextInvoiceNumber()
+    return () => {
+      cancelled = true
+    }
+  }, [usaFacturaComercial, resultado])
 
   const totalVenta = useMemo(
     () => lineasVenta.reduce((acc, l) => acc + Number(l.cantidad || 0) * Number(l.precio_venta || 0), 0),
@@ -148,17 +194,22 @@ export default function Inventory() {
     return true
   }
 
+  const getStockInfo = useCallback((idProducto) => {
+    const p = productos.find((x) => String(x.id_producto ?? x.id) === String(idProducto))
+    if (!p) return null
+    const stockActual = Number(p.stock_actual ?? p.stockActual ?? 0)
+    const stockMinimo = Number(p.stock_minimo ?? p.stockMinimo ?? 0)
+    if (!Number.isFinite(stockActual) || !Number.isFinite(stockMinimo)) return null
+    return {
+      nombre: p.nombre || `Producto #${idProducto}`,
+      stockActual,
+      stockMinimo,
+    }
+  }, [productos])
+
   const shouldShowForceMinimo = useMemo(() => {
     if (!isAdmin) return false
-
-    const getStockInfo = (idProducto) => {
-      const p = productos.find((x) => String(x.id_producto ?? x.id) === String(idProducto))
-      if (!p) return null
-      const stockActual = Number(p.stock_actual ?? p.stockActual ?? 0)
-      const stockMinimo = Number(p.stock_minimo ?? p.stockMinimo ?? 0)
-      if (!Number.isFinite(stockActual) || !Number.isFinite(stockMinimo)) return null
-      return { stockActual, stockMinimo }
-    }
+    if (isVenta) return false
 
     if (isMultiProduct && tipoMovimiento !== 'devolucion') {
       const stockTracker = new Map()
@@ -190,7 +241,9 @@ export default function Inventory() {
     return projected < info.stockMinimo
   }, [
     isAdmin,
+    isVenta,
     isMultiProduct,
+    getStockInfo,
     lineasVenta,
     productos,
     form.id_producto,
@@ -209,7 +262,7 @@ export default function Inventory() {
     setTipoMovimiento(tipo)
     setError('')
     setResultado(null)
-    setForm({ ...INITIAL_FORM, numero_factura: generarNumeroFactura(tipo) })
+    setForm(buildInitialFormForTipo(tipo))
     setLineasVenta([{ id_producto: '', cantidad: 1, precio_venta: 0 }])
   }
 
@@ -249,6 +302,27 @@ export default function Inventory() {
         throw new Error(`Linea ${i + 1}: este producto no permite cantidades fraccionadas.`)
       }
     }
+
+    if (isVenta) {
+      const stockTracker = new Map()
+      for (let i = 0; i < lineasVenta.length; i += 1) {
+        const ln = lineasVenta[i]
+        const info = getStockInfo(ln.id_producto)
+        if (!info) continue
+
+        const key = String(ln.id_producto)
+        const remaining = stockTracker.has(key) ? stockTracker.get(key) : info.stockActual
+        const projected = remaining - Number(ln.cantidad)
+        stockTracker.set(key, projected)
+
+        if (projected < info.stockMinimo) {
+          throw new Error(
+            `No se puede vender ${info.nombre}: stock actual ${remaining}, minimo permitido ${info.stockMinimo}.`
+          )
+        }
+      }
+    }
+
     if (form.forma_pago === 'fiado') {
       if (!form.id_cliente) throw new Error('Debes seleccionar un cliente para registrar un fiado.')
       if (!form.fecha_pago_acordada) throw new Error('Debes especificar una fecha de pago acordada.')
@@ -461,7 +535,7 @@ export default function Inventory() {
   function registrarOtroMovimiento() {
     setResultado(null)
     setError('')
-    setForm({ ...INITIAL_FORM, numero_factura: generarNumeroFactura(tipoMovimiento) })
+    setForm(buildInitialFormForTipo(tipoMovimiento))
     setLineasVenta([{ id_producto: '', cantidad: 1, precio_venta: 0 }])
   }
 
@@ -527,10 +601,17 @@ export default function Inventory() {
           {error && <div className="alert-banner alert-banner--error">{error}</div>}
 
           <div className="form-row">
-            <div className="field">
-              <label className="field__label">Numero de factura</label>
-              <input className="field__input" value={form.numero_factura} onChange={(e) => setForm((p) => ({ ...p, numero_factura: e.target.value }))} />
-            </div>
+            {!usaFacturaComercial ? (
+              <div className="field">
+                <label className="field__label">Numero de factura</label>
+                <input className="field__input" value={form.numero_factura} onChange={(e) => setForm((p) => ({ ...p, numero_factura: e.target.value }))} />
+              </div>
+            ) : (
+              <div className="field">
+                <label className="field__label">Numero de factura final</label>
+                <input className="field__input" value={nextInvoiceNumber || buildNextInvoiceNumber('')} readOnly />
+              </div>
+            )}
             {tipoMovimiento === 'entrada' && (
               <div className="field">
                 <label className="field__label">Tipo de entrada</label>
@@ -753,7 +834,7 @@ export default function Inventory() {
             <button
               type="button"
               className="btn btn--ghost"
-              onClick={() => setForm((p) => ({ ...INITIAL_FORM, numero_factura: generarNumeroFactura(tipoMovimiento) }))}
+              onClick={() => setForm(buildInitialFormForTipo(tipoMovimiento))}
               disabled={loading}
             >
               Limpiar

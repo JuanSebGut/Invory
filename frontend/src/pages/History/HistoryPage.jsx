@@ -74,32 +74,34 @@ export default function HistoryPage() {
           <button onClick={() => setFiltros({ fecha_desde: '', fecha_hasta: '', tipo: '', producto: '', numero_factura: '' })}>Limpiar filtros</button>
         </div>
 
-        <table className="history-page__table">
-          <thead>
-            <tr>
-              <th>Tipo</th>
-              <th>Producto</th>
-              <th>Factura</th>
-              <th>Movimiento</th>
-              <th>Stock resultante</th>
-              <th>Comentarios</th>
-              <th>Fecha y hora</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rendered.map((m) => (
-              <tr key={m.id_movimiento}>
-                <td>{m.tipo || m.movement_type}</td>
-                <td>{m.nombre_producto}</td>
-                <td>{m.numero_factura || '-'}</td>
-                <td><span className={m.__mov.cls}>{m.__mov.text}</span></td>
-                <td>{m.nuevo_stock ?? m.stock_posterior}</td>
-                <td>{m.comentarios || m.comentario || '-'}</td>
-                <td>{m.__f.fecha} {m.__f.hora}</td>
+        <div className="history-table-scroll">
+          <table className="history-page__table">
+            <thead>
+              <tr>
+                <th>Tipo</th>
+                <th>Producto</th>
+                <th>Factura</th>
+                <th>Movimiento</th>
+                <th>Stock resultante</th>
+                <th>Comentarios</th>
+                <th>Fecha y hora</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {rendered.map((m) => (
+                <tr key={m.id_movimiento}>
+                  <td>{m.tipo || m.movement_type}</td>
+                  <td>{m.nombre_producto}</td>
+                  <td>{m.numero_factura || '-'}</td>
+                  <td><span className={m.__mov.cls}>{m.__mov.text}</span></td>
+                  <td>{m.nuevo_stock ?? m.stock_posterior}</td>
+                  <td>{m.comentarios || m.comentario || '-'}</td>
+                  <td>{m.__f.fecha} {m.__f.hora}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   )

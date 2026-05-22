@@ -139,6 +139,8 @@ export default function InvoicesPage() {
   const [error, setError] = useState('')
   const [page, setPage] = useState(1)
   const [pagination, setPagination] = useState({ total: 0, totalPages: 1 })
+  const [invoiceToCancel, setInvoiceToCancel] = useState(null)
+  const [cancelLoading, setCancelLoading] = useState(false)
   const [filters, setFilters] = useState({
     fecha_desde: '',
     fecha_hasta: '',
@@ -189,15 +191,28 @@ export default function InvoicesPage() {
     }
   }
 
-  async function onCancel(idFactura) {
-    const confirmed = window.confirm('¿Seguro que deseas anular esta factura?')
-    if (!confirmed) return
+  function requestCancel(invoice) {
+    if (!invoice || invoice.estado === 'anulada') return
+    setError('')
+    setInvoiceToCancel(invoice)
+  }
 
+  async function confirmCancelInvoice() {
+    if (!invoiceToCancel || invoiceToCancel.estado === 'anulada') {
+      setInvoiceToCancel(null)
+      return
+    }
+
+    setCancelLoading(true)
+    setError('')
     try {
-      await cancelInvoice(idFactura)
+      await cancelInvoice(invoiceToCancel.id_factura)
+      setInvoiceToCancel(null)
       await fetchData()
     } catch (err) {
       setError(err.message || 'No fue posible anular la factura.')
+    } finally {
+      setCancelLoading(false)
     }
   }
 
@@ -305,7 +320,7 @@ export default function InvoicesPage() {
                       Imprimir
                     </button>
                     {isAdmin && invoice.estado !== 'anulada' && (
-                      <button className="invoices-btn invoices-btn--danger" onClick={() => onCancel(invoice.id_factura)} type="button">
+                      <button className="invoices-btn invoices-btn--danger" onClick={() => requestCancel(invoice)} type="button">
                         Anular
                       </button>
                     )}
@@ -340,6 +355,43 @@ export default function InvoicesPage() {
           </div>
         )}
       </div>
+
+      {invoiceToCancel && (
+        <div
+          className="invoices-modal-backdrop"
+          onClick={(event) => { if (event.target === event.currentTarget) setInvoiceToCancel(null) }}
+        >
+          <div className="invoices-confirm-modal">
+            <div className="invoices-confirm-body">
+              <div className="invoices-confirm-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                  <line x1="12" y1="9" x2="12" y2="13" />
+                  <line x1="12" y1="17" x2="12.01" y2="17" />
+                </svg>
+              </div>
+              <h3 className="invoices-confirm-title">Anular factura</h3>
+              <p className="invoices-confirm-text">
+                ¿Confirmas que deseas anular la factura <strong>{invoiceToCancel.numero_factura}</strong>?
+                Esta acción cambiará su estado a anulada.
+              </p>
+            </div>
+            <div className="invoices-confirm-footer">
+              <button className="invoices-btn invoices-btn--ghost" onClick={() => setInvoiceToCancel(null)} type="button">
+                Cancelar
+              </button>
+              <button
+                className="invoices-btn invoices-btn--danger-solid"
+                onClick={confirmCancelInvoice}
+                disabled={cancelLoading}
+                type="button"
+              >
+                {cancelLoading ? 'Procesando...' : 'Anular'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

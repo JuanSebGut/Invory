@@ -12,7 +12,7 @@ function getToken() {
 }
 
 function extractErrorMessage(data) {
-  if (!data) return 'Ocurri� un error inesperado. Por favor intenta nuevamente.'
+  if (!data) return 'Ocurrio un error inesperado. Por favor intenta nuevamente.'
 
   const candidates = [
     data?.error?.message,
@@ -27,7 +27,7 @@ function extractErrorMessage(data) {
     if (candidate && typeof candidate === 'string' && candidate.trim()) return candidate.trim()
   }
 
-  return 'Ocurri� un error inesperado. Por favor intenta nuevamente.'
+  return 'Ocurrio un error inesperado. Por favor intenta nuevamente.'
 }
 
 async function apiFetch(path, options = {}) {
@@ -41,7 +41,7 @@ async function apiFetch(path, options = {}) {
   })
 
   let data = null
-  try { data = await response.json() } catch {}
+  try { data = await response.json() } catch { /* response without JSON body */ }
 
   if (!response.ok) {
     const error = new Error(extractErrorMessage(data))
@@ -60,7 +60,7 @@ export const REPORT_TYPES = [
   { value: 'profits', label: 'Rentabilidad' },
   { value: 'comparative', label: 'Comparativo' },
   { value: 'no-movement', label: 'Sin movimiento' },
-  { value: 'by-category', label: 'Por categor�a' },
+  { value: 'by-category', label: 'Por categoria' },
 ]
 
 export const REPORT_FILTERS = {
